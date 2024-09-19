@@ -25,9 +25,9 @@ export default function Home() {
 
   const removeItem = (item: Item): void => {
     const parent = items.get(item);
+    items.delete(item);
 
     if (!parent) {
-      items.delete(item);
       return;
     }
 
@@ -38,7 +38,6 @@ export default function Home() {
     }
 
     parent.items.splice(index, 1);
-    items.delete(item);
   };
 
   const saveData = (): void => {
