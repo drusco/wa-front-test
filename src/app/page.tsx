@@ -23,6 +23,24 @@ export default function Home() {
     items.set(item);
   };
 
+  const removeItem = (item: Item): void => {
+    const parent = items.get(item);
+
+    if (!parent) {
+      items.delete(item);
+      return;
+    }
+
+    const index = parent.items.indexOf(item);
+
+    if (index < 0) {
+      return;
+    }
+
+    parent.items.splice(index, 1);
+    items.delete(item);
+  };
+
   const saveData = (): void => {
     const tree = buildTree();
     const data: Data = { data: tree };
