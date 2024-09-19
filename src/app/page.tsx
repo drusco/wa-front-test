@@ -9,6 +9,7 @@ interface Item {
 
 export default function Home() {
   const [name, setName] = useState("");
+  const [json, setJson] = useState({});
 
   const items: Map<Item, Item | void> = new Map();
 
@@ -16,7 +17,18 @@ export default function Home() {
     items.set(item);
   };
 
-  const assignItem = (item: Item, newParent: Item): void => {
+  const saveData = (): void => {
+    const tree = buildTree();
+    const data = { data: tree };
+    setJson(data);
+  };
+
+  const buildTree = (): Item[] => {
+    const tree: Item[] = [...items.keys()].filter((item) => items.get(item));
+    return tree;
+  };
+
+  const assignItem = (item: Item, newParent?: Item): void => {
     const parent = items.get(item);
 
     if (!parent) {
@@ -33,7 +45,10 @@ export default function Home() {
       parent.items.splice(index, 1);
     }
 
-    newParent.items.push(item);
+    if (newParent) {
+      newParent.items.push(item);
+    }
+
     items.set(item, newParent);
   };
 
@@ -82,6 +97,10 @@ export default function Home() {
       >
         Criar
       </button>
+      <button onClick={saveData}>salvar</button>
+      <div>
+        <textarea readOnly value={JSON.stringify(json, null, 4)}></textarea>
+      </div>
     </section>
   );
 }
