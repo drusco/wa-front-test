@@ -16,11 +16,20 @@ export default function Home() {
   const [items, setItems] = useState<Map<Item, Item | void>>(new Map());
   const [json, setJson] = useState<Data>({ data: [] });
 
-  const createItem = (item: Item): void => {
+  const createItem = (item: Item, parent?: Item): void => {
+    if (items.has(item)) {
+      return;
+    }
+
     if (!item.name) {
       return;
     }
-    items.set(item);
+
+    if (parent) {
+      parent.items.push(item);
+    }
+
+    items.set(item, parent);
   };
 
   const removeItem = (item: Item): void => {
@@ -52,14 +61,16 @@ export default function Home() {
     return tree;
   };
 
-  const assignItem = (item: Item, newParent?: Item): void => {
+  const assignParent = (item: Item, newParent?: Item): void => {
     const parent = items.get(item);
+
+    items.set(item, newParent);
 
     if (!parent) {
       return;
     }
 
-    if (parent == newParent) {
+    if (parent === newParent) {
       return;
     }
 
@@ -72,8 +83,6 @@ export default function Home() {
     if (newParent) {
       newParent.items.push(item);
     }
-
-    items.set(item, newParent);
   };
 
   const orderItem = (item: Item, newIndex: number): void => {
@@ -129,9 +138,9 @@ export default function Home() {
           salvar
         </button>
       </div>
-      <div className="border border-black mt-2">
+      <div className="border border-black rounded overflow-hidden mt-2 min-h-[300px] relative">
         <textarea
-          className="w-full h-full"
+          className="w-full h-full absolute p-3"
           readOnly
           value={JSON.stringify(json, null, 4)}
         ></textarea>
