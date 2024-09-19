@@ -7,24 +7,31 @@ interface Item {
   items: Item[];
 }
 
-export default function Home() {
-  const [name, setName] = useState("");
-  const [json, setJson] = useState({});
+interface Data {
+  data: Item[];
+}
 
-  const items: Map<Item, Item | void> = new Map();
+export default function Home() {
+  const [name, setName] = useState<string>("");
+  const [items, setItems] = useState<Map<Item, Item | void>>(new Map());
+  const [json, setJson] = useState<Data>({ data: [] });
 
   const createItem = (item: Item): void => {
+    if (!item.name) {
+      return;
+    }
     items.set(item);
   };
 
   const saveData = (): void => {
     const tree = buildTree();
-    const data = { data: tree };
+    const data: Data = { data: tree };
+
     setJson(data);
   };
 
   const buildTree = (): Item[] => {
-    const tree: Item[] = [...items.keys()].filter((item) => items.get(item));
+    const tree: Item[] = [...items.keys()].filter((item) => !items.get(item));
     return tree;
   };
 
@@ -97,7 +104,12 @@ export default function Home() {
       >
         Criar
       </button>
-      <button onClick={saveData}>salvar</button>
+      <button
+        className="block bg-white rounded-sm py-1 px-3"
+        onClick={saveData}
+      >
+        salvar
+      </button>
       <div>
         <textarea readOnly value={JSON.stringify(json, null, 4)}></textarea>
       </div>
