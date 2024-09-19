@@ -85,33 +85,39 @@ export default function Home() {
   };
 
   return (
-    <section className="text-black">
-      <input
-        value={name}
-        onChange={(event) => setName(event.target.value)}
-        type="text"
-        placeholder="Nome do item"
-        className="block"
-      ></input>
-      <select>
-        <option>-- selecionar --</option>
-      </select>
-      <button
-        className="block bg-white rounded-sm py-1 px-3"
-        onClick={() => {
-          createItem({ name, items: [] });
-        }}
-      >
-        Criar
-      </button>
-      <button
-        className="block bg-white rounded-sm py-1 px-3"
-        onClick={saveData}
-      >
-        salvar
-      </button>
-      <div>
-        <textarea readOnly value={JSON.stringify(json, null, 4)}></textarea>
+    <section className="p-2">
+      <div className="space-x-2">
+        <input
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          type="text"
+          placeholder="Nome do item"
+          className="border border-black rounded-sm p-1"
+        ></input>
+        <select className="p-1 border-black border rounded-sm">
+          <option>-- selecionar --</option>
+        </select>
+        <button
+          className="text-white bg-black rounded-sm py-1 px-3"
+          onClick={() => {
+            createItem({ name, items: [] });
+          }}
+        >
+          Criar
+        </button>
+        <button
+          className="text-white bg-black rounded-sm py-1 px-3"
+          onClick={saveData}
+        >
+          salvar
+        </button>
+      </div>
+      <div className="border border-black mt-2">
+        <textarea
+          className="w-full h-full"
+          readOnly
+          value={JSON.stringify(json, null, 4)}
+        ></textarea>
       </div>
     </section>
   );
