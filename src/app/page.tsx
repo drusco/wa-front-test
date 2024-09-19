@@ -85,6 +85,32 @@ export default function Home() {
     }
   };
 
+  const orderMapItem = (
+    map: Map<Item, Item | void>,
+    item: Item,
+    newIndex: number
+  ): void => {
+    if (!map.has(item)) {
+      return;
+    }
+
+    if (newIndex < 0) {
+      newIndex = 0;
+    }
+
+    if (newIndex >= map.size) {
+      newIndex = map.size - 1;
+    }
+
+    const mapAsArray = Array.from(map);
+    const index = mapAsArray.findIndex(([key]) => key === item);
+    const value = mapAsArray.splice(index, 1)[0];
+
+    mapAsArray.splice(newIndex, 0, value);
+
+    setItems(new Map(mapAsArray));
+  };
+
   const orderItem = (item: Item, newIndex: number): void => {
     const parent = items.get(item);
 
