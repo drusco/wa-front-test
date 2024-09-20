@@ -26,6 +26,8 @@ export default function Home() {
     } else {
       setItems((prevItems) => [...prevItems, item]);
     }
+
+    setName("");
   };
 
   const removeItem = (item: Item): void => {
@@ -107,7 +109,7 @@ export default function Home() {
       <ol>
         {items.map((item, index) => (
           <li key={index} className="my-1 border-b border-1 border-black">
-            <div className="flex">
+            <div className="flex justify-between">
               <div className="space-x-2 mr-2">
                 <button
                   onClick={() => {
@@ -127,7 +129,14 @@ export default function Home() {
                 </button>
               </div>
               <div>{item.name}</div>
-              <div className="ml-auto bg-black text-white">
+              <div className="bg-black text-white space-x-2">
+                <button
+                  onClick={() => {
+                    createItem({ name, items: [] }, item);
+                  }}
+                >
+                  + subitem
+                </button>
                 <button
                   onClick={() => {
                     removeItem(item);
@@ -156,9 +165,6 @@ export default function Home() {
           placeholder="Nome do item"
           className="border border-black rounded-sm p-1"
         ></input>
-        <select className="p-1 border-black border rounded-sm">
-          <option>-- selecionar --</option>
-        </select>
         <button
           className="text-white bg-black rounded-sm py-1 px-3"
           onClick={() => {
