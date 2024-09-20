@@ -106,16 +106,15 @@ export default function Home() {
 
   const renderItems = (items: Item[]): JSX.Element => {
     return (
-      <ol>
+      <ol className="tree">
         {items.map((item, index) => (
-          <li key={index} className="my-1 border-b border-1 border-black">
-            <div className="flex justify-between">
-              <div className="space-x-2 mr-2">
+          <li key={index}>
+            <div className="tree-wrapper">
+              <div className="tree-actions">
                 <button
                   onClick={() => {
                     orderItem(item, index - 1);
                   }}
-                  className="bg-black text-white"
                 >
                   up
                 </button>
@@ -123,13 +122,12 @@ export default function Home() {
                   onClick={() => {
                     orderItem(item, index + 1);
                   }}
-                  className="bg-black text-white"
                 >
                   down
                 </button>
               </div>
-              <div>{item.name}</div>
-              <div className="bg-black text-white space-x-2">
+              <div className="tree-name">{item.name}</div>
+              <div className="tree-actions">
                 <button
                   onClick={() => {
                     createItem({ name, items: [] }, item);
@@ -146,9 +144,7 @@ export default function Home() {
                 </button>
               </div>
             </div>
-            <div className="pl-1">
-              {item.items.length > 0 && renderItems(item.items)}
-            </div>
+            {item.items.length > 0 && renderItems(item.items)}
           </li>
         ))}
       </ol>

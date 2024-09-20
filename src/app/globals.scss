@@ -23,3 +23,21 @@ body {
     text-wrap: balance;
   }
 }
+
+@layer components {
+  button {
+    @apply bg-orange-500 text-white rounded px-2;
+  }
+
+  .tree {
+  }
+  .tree .tree-wrapper {
+    @apply flex;
+  }
+  .tree ol {
+    @apply ml-2;
+  }
+  .tree ol > li {
+    @apply bg-slate-800;
+  }
+}
