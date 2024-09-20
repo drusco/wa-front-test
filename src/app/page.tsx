@@ -106,6 +106,41 @@ export default function Home() {
     itemList.splice(newIndex, 0, item);
   };
 
+  const renderItems = (items: Item[]): JSX.Element => {
+    return (
+      <ol>
+        {items.map((item, index) => (
+          <li key={item.name} className="my-1 border-b border-1 border-black">
+            <div className="flex">
+              <div className="space-x-1">
+                <button
+                  onClick={() => {
+                    orderItem(item, index - 1);
+                  }}
+                  className="bg-black text-white"
+                >
+                  up
+                </button>
+                <button
+                  onClick={() => {
+                    orderItem(item, index + 1);
+                  }}
+                  className="bg-black text-white"
+                >
+                  down
+                </button>
+              </div>
+              <div>{item.name}</div>
+            </div>
+            <div className="pl-1">
+              {item.items.length > 0 && renderItems(item.items)}
+            </div>
+          </li>
+        ))}
+      </ol>
+    );
+  };
+
   return (
     <section className="p-2">
       <div className="space-x-2">
@@ -134,7 +169,7 @@ export default function Home() {
           salvar
         </button>
       </div>
-      <div className="border border-black rounded overflow-hidden mt-2 min-h-[300px] relative">
+      <div className="border border-black rounded overflow-hidden mt-2 min-h-[200px] relative">
         <textarea
           className="w-full h-full absolute p-3"
           readOnly
@@ -142,7 +177,7 @@ export default function Home() {
         ></textarea>
       </div>
 
-      <div></div>
+      <div className="mt-4">{renderItems(items)}</div>
     </section>
   );
 }
