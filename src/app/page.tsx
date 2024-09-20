@@ -13,127 +13,97 @@ interface Data {
 
 export default function Home() {
   const [name, setName] = useState<string>("");
-  const [items, setItems] = useState<Map<Item, Item | void>>(new Map());
+  const [items, setItems] = useState<Item[]>([]);
   const [json, setJson] = useState<Data>({ data: [] });
 
   const createItem = (item: Item, parent?: Item): void => {
-    if (items.has(item)) {
-      return;
-    }
-
     if (!item.name) {
       return;
     }
 
     if (parent) {
       parent.items.push(item);
+    } else {
+      setItems((prevItems) => [...prevItems, item]);
     }
-
-    items.set(item, parent);
   };
 
   const removeItem = (item: Item): void => {
-    const parent = items.get(item);
-    items.delete(item);
+    const removeFromParent = (parent: Item, child: Item) => {
+      const index = parent.items.indexOf(child);
+      if (index >= 0) {
+        parent.items.splice(index, 1);
+      }
+    };
 
-    if (!parent) {
-      return;
-    }
+    items.forEach((rootItem) => {
+      removeFromParent(rootItem, item);
+    });
 
-    const index = parent.items.indexOf(item);
-
-    if (index < 0) {
-      return;
-    }
-
-    parent.items.splice(index, 1);
+    setItems((prevItems) => prevItems.filter((rootItem) => rootItem !== item));
   };
 
   const saveData = (): void => {
-    const tree = buildTree();
-    const data: Data = { data: tree };
-
+    const data: Data = { data: items };
     setJson(data);
   };
 
-  const buildTree = (): Item[] => {
-    const tree: Item[] = [...items.keys()].filter((item) => !items.get(item));
-    return tree;
+  const removeFromParent = (parent: Item, child: Item) => {
+    const index = parent.items.indexOf(child);
+    if (index >= 0) {
+      parent.items.splice(index, 1);
+    }
+  };
+
+  const findParent = (rootItems: Item[], child: Item): Item | undefined => {
+    for (const root of rootItems) {
+      if (root.items.includes(child)) {
+        return root;
+      }
+      const found = findParent(root.items, child);
+      if (found) {
+        return found;
+      }
+    }
+    return undefined;
   };
 
   const assignParent = (item: Item, newParent?: Item): void => {
-    const parent = items.get(item);
-
-    items.set(item, newParent);
-
-    if (!parent) {
-      return;
-    }
+    const parent = findParent(items, item);
 
     if (parent === newParent) {
       return;
     }
 
-    const index = parent.items.indexOf(item);
-
-    if (index >= 0) {
-      parent.items.splice(index, 1);
+    if (parent) {
+      removeFromParent(parent, item);
     }
 
     if (newParent) {
       newParent.items.push(item);
+    } else {
+      setItems((prevItems) => [...prevItems, item]);
     }
   };
 
-  const orderMapItem = (
-    map: Map<Item, Item | void>,
-    item: Item,
-    newIndex: number
-  ): void => {
-    if (!map.has(item)) {
-      return;
-    }
+  const orderItem = (item: Item, newIndex: number, parent?: Item): void => {
+    const itemList = parent ? parent.items : items;
 
     if (newIndex < 0) {
       newIndex = 0;
     }
 
-    if (newIndex >= map.size) {
-      newIndex = map.size - 1;
+    if (newIndex >= itemList.length) {
+      newIndex = itemList.length - 1;
     }
 
-    const mapAsArray = Array.from(map);
-    const index = mapAsArray.findIndex(([key]) => key === item);
-    const value = mapAsArray.splice(index, 1)[0];
-
-    mapAsArray.splice(newIndex, 0, value);
-
-    setItems(new Map(mapAsArray));
-  };
-
-  const orderItem = (item: Item, newIndex: number): void => {
-    const parent = items.get(item);
-
-    if (!parent) {
-      return;
-    }
-
-    if (newIndex < 0) {
-      newIndex = 0;
-    }
-
-    if (newIndex >= parent.items.length) {
-      newIndex = parent.items.length - 1;
-    }
-
-    const index = parent.items.indexOf(item);
-
+    const index = itemList.indexOf(item);
     if (index < 0) {
       return;
     }
 
-    parent.items.splice(index, 1);
-    parent.items.splice(newIndex, 0, item);
+    itemList.splice(index, 1);
+    itemList.splice(newIndex, 0, item);
   };
 
   return (
@@ -171,6 +141,8 @@ export default function Home() {
           value={JSON.stringify(json, null, 4)}
         ></textarea>
       </div>
+
+      <div></div>
     </section>
   );
 }
