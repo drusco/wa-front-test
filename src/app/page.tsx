@@ -45,6 +45,7 @@ export default function Home() {
     const index = parent.items.indexOf(child);
     if (index >= 0) {
       parent.items.splice(index, 1);
+      setItems([...items]);
     }
   };
 
@@ -97,15 +98,17 @@ export default function Home() {
 
     itemList.splice(index, 1);
     itemList.splice(newIndex, 0, item);
+
+    setItems([...items]);
   };
 
   const renderItems = (items: Item[]): JSX.Element => {
     return (
       <ol>
         {items.map((item, index) => (
-          <li key={item.name} className="my-1 border-b border-1 border-black">
+          <li key={index} className="my-1 border-b border-1 border-black">
             <div className="flex">
-              <div className="space-x-1">
+              <div className="space-x-2 mr-2">
                 <button
                   onClick={() => {
                     orderItem(item, index - 1);
@@ -124,6 +127,15 @@ export default function Home() {
                 </button>
               </div>
               <div>{item.name}</div>
+              <div className="ml-auto bg-black text-white">
+                <button
+                  onClick={() => {
+                    removeItem(item);
+                  }}
+                >
+                  delete
+                </button>
+              </div>
             </div>
             <div className="pl-1">
               {item.items.length > 0 && renderItems(item.items)}
