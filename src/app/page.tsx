@@ -29,13 +29,6 @@ export default function Home() {
   };
 
   const removeItem = (item: Item): void => {
-    const removeFromParent = (parent: Item, child: Item) => {
-      const index = parent.items.indexOf(child);
-      if (index >= 0) {
-        parent.items.splice(index, 1);
-      }
-    };
-
     items.forEach((rootItem) => {
       removeFromParent(rootItem, item);
     });
