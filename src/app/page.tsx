@@ -69,7 +69,6 @@ const DraggableItem: React.FC<DraggableItem> = ({
 
   return (
     <li
-      ref={(node) => drag(drop(node))}
       key={index}
       style={{
         opacity: isDragging ? 0.5 : 1,
@@ -83,7 +82,9 @@ const DraggableItem: React.FC<DraggableItem> = ({
         >
           +
         </button>
-        <div className="tree-name">{item.name}</div>
+        <div ref={(node) => drag(drop(node))} className="tree-name">
+          {item.name}
+        </div>
         <div className="tree-actions">
           <button onClick={() => removeItem(item)}>Delete</button>
         </div>
@@ -134,6 +135,8 @@ export default function Home() {
         return prevItems;
       }
 
+      console.log("movitem", draggedItem, targetItem);
+
       let updatedItems = [...prevItems];
 
       const currentParent = findParent(updatedItems, draggedItem);
@@ -171,14 +174,16 @@ export default function Home() {
   };
 
   const removeItem = (item: Item): void => {
-    const updatedItems = items.filter((rootItem) => {
-      if (rootItem === item) {
-        return false;
-      }
-      return !removeFromParent(rootItem, item);
-    });
+    setItems(() => {
+      const updatedItems = items.filter((rootItem) => {
+        if (rootItem === item) {
+          return false;
+        }
+        return !removeFromParent(rootItem, item);
+      });
 
-    setItems(updatedItems);
+      return updatedItems;
+    });
   };
 
   const saveData = (): void => {
@@ -214,24 +219,6 @@ export default function Home() {
       }
     }
     return;
-  };
-
-  const assignParent = (item: Item, newParent?: Item): void => {
-    const parent = findParent(items, item);
-
-    if (parent === newParent) {
-      return;
-    }
-
-    if (parent) {
-      removeFromParent(parent, item);
-    }
-
-    if (newParent) {
-      newParent.items.push(item);
-    }
-
-    setItems([...items]);
   };
 
   const orderItem = (item: Item, newIndex: number, parent?: Item): void => {
