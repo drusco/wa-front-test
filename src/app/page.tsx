@@ -257,6 +257,20 @@ export default function Home() {
     setItems((items) => [...items]);
   };
 
+  const download = (): void => {
+    const blob = new Blob([JSON.stringify(json, null, 4)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "data.json";
+    a.click();
+
+    URL.revokeObjectURL(url);
+  };
+
   useEffect(() => {
     saveData();
   }, [items]);
@@ -272,7 +286,6 @@ export default function Home() {
           className="border border-black rounded-sm p-1"
         ></input>
         <button
-          className="text-white bg-black rounded-sm py-1 px-3"
           onClick={() => {
             createItem({ id: self.crypto.randomUUID(), name, items: [] });
           }}
@@ -298,13 +311,9 @@ export default function Home() {
         </DndProvider>
       </div>
 
-      <div className="mt-4">
-        <button
-          className="text-white bg-black rounded-sm py-1 px-3"
-          onClick={saveData}
-        >
-          salvar
-        </button>
+      <div className="mt-4 space-x-2">
+        <button onClick={saveData}>salvar</button>
+        <button onClick={download}>download</button>
       </div>
     </section>
   );
