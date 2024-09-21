@@ -17,19 +17,22 @@ interface Data {
 interface DraggableItems {
   items: Item[];
   moveItem: (draggedItem: Item, targetItem?: Item) => void;
-  removeItem: (id: string) => boolean;
+  removeItem: (item: Item) => boolean;
+  orderItem: (item: Item, indexOffset: number) => void;
 }
 
 interface DraggableItem {
   item: Item;
   moveItem: (draggedItem: Item, targetItem?: Item) => void;
-  removeItem: (id: string) => boolean;
+  removeItem: (item: Item) => boolean;
+  orderItem: (item: Item, indexOffset: number) => void;
 }
 
 const DraggableItems: React.FC<DraggableItems> = ({
   items,
   moveItem,
   removeItem,
+  orderItem,
 }) => {
   return (
     <div className="tree">
@@ -39,6 +42,7 @@ const DraggableItems: React.FC<DraggableItems> = ({
           item={item}
           moveItem={moveItem}
           removeItem={removeItem}
+          orderItem={orderItem}
         />
       ))}
     </div>
@@ -49,6 +53,7 @@ const DraggableItem: React.FC<DraggableItem> = ({
   item,
   moveItem,
   removeItem,
+  orderItem,
 }) => {
   const [{ isDragging }, drag] = useDrag(() => ({
     type: "item",
@@ -68,7 +73,6 @@ const DraggableItem: React.FC<DraggableItem> = ({
     accept: "item",
     drop: (draggedItem: Item) => {
       if (draggedItem !== item) {
-        console.log("drop");
         moveItem(draggedItem, item);
       }
     },
@@ -95,7 +99,9 @@ const DraggableItem: React.FC<DraggableItem> = ({
           </button>
           <div className="tree-name">{item.name}</div>
           <div className="tree-actions">
-            <button onClick={() => removeItem(item.id)}>Delete</button>
+            <button onClick={() => orderItem(item, -1)}>up</button>
+            <button onClick={() => orderItem(item, 1)}>down</button>
+            <button onClick={() => removeItem(item)}>Delete</button>
           </div>
         </div>
       </div>
@@ -107,6 +113,7 @@ const DraggableItem: React.FC<DraggableItem> = ({
               item={subitem}
               moveItem={moveItem}
               removeItem={removeItem}
+              orderItem={orderItem}
             />
           ))}
         </div>
@@ -151,7 +158,7 @@ export default function Home() {
 
     const updatedItems = [...items];
 
-    const parent = findParent(updatedItems, draggedItem);
+    const parent = findParent(draggedItem, updatedItems);
 
     if (!parent && !targetItem) {
       return;
@@ -161,7 +168,7 @@ export default function Home() {
       return;
     }
 
-    removeItem(draggedItem.id, updatedItems);
+    removeItem(draggedItem, updatedItems);
 
     if (targetItem) {
       targetItem.items = [...targetItem.items, draggedItem];
@@ -192,14 +199,18 @@ export default function Home() {
   };
 
   const saveData = (): void => {
+    console.log("save to store");
+  };
+
+  const updateData = (): void => {
     const data: Data = { data: items };
     setJson(data);
   };
 
-  const removeItem = (id: string, fromArray?: Item[]): boolean => {
+  const removeItem = (item: Item, fromArray?: Item[]): boolean => {
     const itemList = fromArray ?? items;
 
-    const index = itemList.findIndex((item) => item.id === id);
+    const index = itemList.findIndex((entry) => entry === item);
 
     if (index >= 0) {
       const [removedItem] = itemList.splice(index, 1);
@@ -211,8 +222,8 @@ export default function Home() {
     }
 
     for (const child of itemList) {
-      if (removeItem(id, child.items)) {
-        console.log("removed", id, "from", child.name);
+      if (removeItem(item, child.items)) {
+        console.log("removed", item.name, "from", child.name);
         if (!fromArray) {
           setItems([...itemList]);
         }
@@ -223,20 +234,31 @@ export default function Home() {
     return false;
   };
 
-  const findParent = (fromArray: Item[], item: Item): Item | void => {
-    for (const root of fromArray) {
+  const findParent = (item: Item, fromArray?: Item[]): Item | void => {
+    const itemList = fromArray ?? items;
+
+    for (const root of itemList) {
       if (root.items.includes(item)) {
         return root;
       }
-      const found = findParent(root.items, item);
+      const found = findParent(item, root.items);
       if (found) {
         return found;
       }
     }
-    return;
   };
 
-  const orderItem = (fromArray: Item[], item: Item, newIndex: number): void => {
+  const orderItem = (item: Item, indexOffset: number): void => {
+    const parent = findParent(item);
+    const fromArray = parent ? [...parent.items] : [...items];
+    const index = fromArray.indexOf(item);
+
+    if (index < 0) {
+      return;
+    }
+
+    let newIndex = index + indexOffset;
+
     if (newIndex < 0) {
       newIndex = 0;
     }
@@ -245,19 +267,19 @@ export default function Home() {
       newIndex = fromArray.length - 1;
     }
 
-    const index = fromArray.indexOf(item);
-
-    if (index < 0) {
-      return;
-    }
-
     fromArray.splice(index, 1);
     fromArray.splice(newIndex, 0, item);
 
-    setItems((items) => [...items]);
+    if (parent) {
+      parent.items = fromArray;
+    } else {
+      setItems(fromArray);
+    }
   };
 
   const download = (): void => {
+    updateData();
+
     const blob = new Blob([JSON.stringify(json, null, 4)], {
       type: "application/json",
     });
@@ -272,7 +294,8 @@ export default function Home() {
   };
 
   useEffect(() => {
-    saveData();
+    updateData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items]);
 
   return (
@@ -307,13 +330,14 @@ export default function Home() {
             items={items}
             removeItem={removeItem}
             moveItem={moveItem}
+            orderItem={orderItem}
           ></DraggableItems>
         </DndProvider>
       </div>
 
       <div className="mt-4 space-x-2">
-        <button onClick={saveData}>salvar</button>
-        <button onClick={download}>download</button>
+        <button onClick={saveData}>Salvar</button>
+        <button onClick={download}>Baixar Arquivo JSON</button>
       </div>
     </section>
   );
