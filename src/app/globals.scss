@@ -30,21 +30,19 @@ body {
   }
 
   .tree {
+    &-wrapper {
+      @apply flex bg-slate-200 border border-slate-700 space-x-3;
+    }
+    &-name {
+      @apply w-full bg-yellow-300 border-l;
+    }
+    &-actions {
+      @apply flex space-x-2;
+    }
     .tree {
-      &-wrapper {
-        @apply flex bg-slate-200 border border-slate-700 space-x-3;
-        ~ .tree {
-          @apply pl-10;
-          .tree-wrapper {
-            @apply border-t-0;
-          }
-        }
-      }
-      &-name {
-        @apply w-full bg-yellow-300 border-l;
-      }
-      &-actions {
-        @apply flex space-x-2;
+      @apply pl-10;
+      .tree-wrapper {
+        @apply border-t-0;
       }
     }
   }

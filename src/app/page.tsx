@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
 interface Item {
+  id: string;
   name: string;
   items: Item[];
 }
@@ -16,14 +17,13 @@ interface Data {
 interface DraggableItems {
   items: Item[];
   moveItem: (draggedItem: Item, targetItem?: Item) => void;
-  removeItem: (item: Item) => void;
+  removeItem: (id: string) => boolean;
 }
 
 interface DraggableItem {
   item: Item;
-  index: number;
   moveItem: (draggedItem: Item, targetItem?: Item) => void;
-  removeItem: (item: Item) => void;
+  removeItem: (id: string) => boolean;
 }
 
 const DraggableItems: React.FC<DraggableItems> = ({
@@ -32,23 +32,21 @@ const DraggableItems: React.FC<DraggableItems> = ({
   removeItem,
 }) => {
   return (
-    <ol className="tree">
-      {items.map((item, index) => (
+    <div className="tree">
+      {items.map((item) => (
         <DraggableItem
-          key={index}
+          key={item.id}
           item={item}
-          index={index}
           moveItem={moveItem}
           removeItem={removeItem}
         />
       ))}
-    </ol>
+    </div>
   );
 };
 
 const DraggableItem: React.FC<DraggableItem> = ({
   item,
-  index,
   moveItem,
   removeItem,
 }) => {
@@ -58,51 +56,62 @@ const DraggableItem: React.FC<DraggableItem> = ({
     collect: (monitor) => ({
       isDragging: !!monitor.isDragging(),
     }),
+    end: (draggedItem: Item, monitor) => {
+      const dropResult = !!monitor.getDropResult();
+      if (!dropResult) {
+        moveItem(draggedItem);
+      }
+    },
   }));
 
   const [, drop] = useDrop(() => ({
     accept: "item",
     drop: (draggedItem: Item) => {
-      moveItem(draggedItem, item);
+      if (draggedItem !== item) {
+        console.log("drop");
+        moveItem(draggedItem, item);
+      }
     },
   }));
 
   return (
-    <li
-      key={index}
-      style={{
-        opacity: isDragging ? 0.5 : 1,
-      }}
-    >
-      <div className="tree-wrapper">
-        <button
-          onClick={() => {
-            moveItem({ name: "New Item", items: [] }, item);
-          }}
-        >
-          +
-        </button>
-        <div ref={(node) => drag(drop(node))} className="tree-name">
-          {item.name}
-        </div>
-        <div className="tree-actions">
-          <button onClick={() => removeItem(item)}>Delete</button>
+    <Fragment>
+      <div
+        ref={(node) => drag(drop(node))}
+        style={{
+          opacity: isDragging ? 0.5 : 1,
+        }}
+      >
+        <div className="tree-wrapper">
+          <button
+            onClick={() => {
+              moveItem(
+                { id: self.crypto.randomUUID(), name: "New Item", items: [] },
+                item
+              );
+            }}
+          >
+            +
+          </button>
+          <div className="tree-name">{item.name}</div>
+          <div className="tree-actions">
+            <button onClick={() => removeItem(item.id)}>Delete</button>
+          </div>
         </div>
       </div>
       {item.items.length > 0 && (
-        <ol className="tree">
-          {item.items.map((childItem, index) => (
+        <div className="tree">
+          {item.items.map((subitem) => (
             <DraggableItem
-              key={index}
-              item={childItem}
-              index={index}
+              key={subitem.id}
+              item={subitem}
               moveItem={moveItem}
               removeItem={removeItem}
             />
           ))}
-        </ol>
+        </div>
       )}
-    </li>
+    </Fragment>
   );
 };
 
@@ -126,37 +135,45 @@ export default function Home() {
   };
 
   const moveItem = (draggedItem: Item, targetItem?: Item): void => {
-    setItems((prevItems) => {
-      if (draggedItem === targetItem) {
-        return prevItems;
-      }
+    console.log("-----------------\n\r", items);
 
-      if (targetItem && isDescendant(draggedItem, targetItem)) {
-        return prevItems;
-      }
+    console.log("move", draggedItem.name, "to", targetItem?.name);
 
-      console.log("movitem", draggedItem, targetItem);
+    if (draggedItem === targetItem) {
+      console.log("cancelled: dragged item equals target item");
+      return;
+    }
 
-      let updatedItems = [...prevItems];
+    if (targetItem && isDescendant(draggedItem, targetItem)) {
+      console.log("cancelled: prevent circular references");
+      return;
+    }
 
-      const currentParent = findParent(updatedItems, draggedItem);
+    const updatedItems = [...items];
 
-      if (currentParent) {
-        currentParent.items = currentParent.items.filter(
-          (item) => item !== draggedItem
-        );
-      } else {
-        updatedItems = updatedItems.filter((item) => item !== draggedItem);
-      }
+    const parent = findParent(updatedItems, draggedItem);
 
-      if (targetItem) {
-        targetItem.items.push(draggedItem);
-      } else {
-        updatedItems.push(draggedItem);
-      }
+    if (!parent && !targetItem) {
+      return;
+    }
 
-      return updatedItems;
-    });
+    if (targetItem && targetItem.items.includes(draggedItem)) {
+      return;
+    }
+
+    removeItem(draggedItem.id, updatedItems);
+
+    if (targetItem) {
+      targetItem.items = [...targetItem.items, draggedItem];
+      console.log("added", draggedItem.name, "to target.items");
+    } else {
+      console.log("added", draggedItem.name, "to root items");
+      updatedItems.push(draggedItem);
+    }
+
+    console.log("final", JSON.parse(JSON.stringify(updatedItems)));
+
+    setItems(updatedItems);
   };
 
   const createItem = (item: Item, parent?: Item): void => {
@@ -167,23 +184,11 @@ export default function Home() {
     if (parent) {
       parent.items.push(item);
     } else {
-      setItems((prevItems) => [...prevItems, item]);
+      items.push(item);
     }
 
     setName("");
-  };
-
-  const removeItem = (item: Item): void => {
-    setItems(() => {
-      const updatedItems = items.filter((rootItem) => {
-        if (rootItem === item) {
-          return false;
-        }
-        return !removeFromParent(rootItem, item);
-      });
-
-      return updatedItems;
-    });
+    setItems(items);
   };
 
   const saveData = (): void => {
@@ -191,16 +196,26 @@ export default function Home() {
     setJson(data);
   };
 
-  const removeFromParent = (parent: Item, childToRemove: Item): boolean => {
-    const index = parent.items.findIndex((child) => child === childToRemove);
+  const removeItem = (id: string, fromArray?: Item[]): boolean => {
+    const itemList = fromArray ?? items;
+
+    const index = itemList.findIndex((item) => item.id === id);
 
     if (index >= 0) {
-      parent.items.splice(index, 1);
+      const [removedItem] = itemList.splice(index, 1);
+      console.log("removed", removedItem.name, "from root");
+      if (!fromArray) {
+        setItems([...itemList]);
+      }
       return true;
     }
 
-    for (const child of parent.items) {
-      if (removeFromParent(child, childToRemove)) {
+    for (const child of itemList) {
+      if (removeItem(id, child.items)) {
+        console.log("removed", id, "from", child.name);
+        if (!fromArray) {
+          setItems([...itemList]);
+        }
         return true;
       }
     }
@@ -208,12 +223,12 @@ export default function Home() {
     return false;
   };
 
-  const findParent = (rootItems: Item[], child: Item): Item | void => {
-    for (const root of rootItems) {
-      if (root.items.includes(child)) {
+  const findParent = (fromArray: Item[], item: Item): Item | void => {
+    for (const root of fromArray) {
+      if (root.items.includes(item)) {
         return root;
       }
-      const found = findParent(root.items, child);
+      const found = findParent(root.items, item);
       if (found) {
         return found;
       }
@@ -221,27 +236,30 @@ export default function Home() {
     return;
   };
 
-  const orderItem = (item: Item, newIndex: number, parent?: Item): void => {
-    const itemList = parent ? parent.items : items;
-
+  const orderItem = (fromArray: Item[], item: Item, newIndex: number): void => {
     if (newIndex < 0) {
       newIndex = 0;
     }
 
-    if (newIndex >= itemList.length) {
-      newIndex = itemList.length - 1;
+    if (newIndex >= fromArray.length) {
+      newIndex = fromArray.length - 1;
     }
 
-    const index = itemList.indexOf(item);
+    const index = fromArray.indexOf(item);
+
     if (index < 0) {
       return;
     }
 
-    itemList.splice(index, 1);
-    itemList.splice(newIndex, 0, item);
+    fromArray.splice(index, 1);
+    fromArray.splice(newIndex, 0, item);
 
-    setItems([...items]);
+    setItems((items) => [...items]);
   };
+
+  useEffect(() => {
+    saveData();
+  }, [items]);
 
   return (
     <section className="p-2">
@@ -256,7 +274,7 @@ export default function Home() {
         <button
           className="text-white bg-black rounded-sm py-1 px-3"
           onClick={() => {
-            createItem({ name, items: [] });
+            createItem({ id: self.crypto.randomUUID(), name, items: [] });
           }}
         >
           Criar
