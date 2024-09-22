@@ -5,6 +5,7 @@ import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { TouchBackend } from "react-dnd-touch-backend";
 import { isMobile } from "react-device-detect";
 import { HTML5Backend } from "react-dnd-html5-backend";
+import { v4 as uuidv4 } from "uuid";
 
 const backend = isMobile ? TouchBackend : HTML5Backend;
 
@@ -74,6 +75,7 @@ const DraggableItem: React.FC<DraggableItem> = ({
   createItem,
   setItems,
 }) => {
+  const [showChildren, setShowChildren] = useState<boolean>(true);
   const [{ isDragging }, drag] = useDrag(() => ({
     type: "item",
     item,
@@ -88,6 +90,10 @@ const DraggableItem: React.FC<DraggableItem> = ({
     },
   }));
 
+  useEffect(() => {
+    setShowChildren(!item.items.length);
+  }, [item.items]);
+
   const [, drop] = useDrop(() => ({
     accept: "item",
     drop: (draggedItem: Item, monitor) => {
@@ -99,6 +105,7 @@ const DraggableItem: React.FC<DraggableItem> = ({
         console.log("**", movement);
         if (movement.x >= 20) {
           moveItem(draggedItem, item);
+          setShowChildren(true);
         } else {
           let offset: number | null = null;
           setItems((items) => {
@@ -134,24 +141,41 @@ const DraggableItem: React.FC<DraggableItem> = ({
     <Fragment>
       <div
         ref={(node) => drag(drop(node))}
-        className={`tree-item ${isDragging ? "tree-item-dragging" : ""}`}
+        className={`tree-item 
+          ${isDragging ? "tree-item-dragging" : ""} 
+          ${showChildren ? "tree-item-expanded" : ""}
+        `}
       >
         <div className="tree-wrapper">
           <button
+            className="tree-childrenButton"
             onClick={() => {
-              createItem(
-                { id: self.crypto.randomUUID(), name: "New Item", items: [] },
-                item
-              );
+              if (item.items.length) {
+                setShowChildren(!showChildren);
+              }
             }}
           >
-            +
+            {showChildren && item.items.length
+              ? "-"
+              : item.items.length
+              ? "+"
+              : "*"}
           </button>
-          <div className="tree-name">{item.name}</div>
+
+          <div className="tree-name">
+            <input
+              type="text"
+              value={item.name}
+              onChange={(e) => {
+                item.name = e.target.value;
+                setItems((items) => [...items]);
+              }}
+            />
+          </div>
           <div className="tree-actions">
-            <button onClick={() => orderItem(item, -1)}>up</button>
-            <button onClick={() => orderItem(item, 1)}>down</button>
-            <button onClick={() => removeItem(item)}>Delete</button>
+            <button onClick={() => orderItem(item, -1)}>-</button>
+            <button onClick={() => orderItem(item, 1)}>+</button>
+            <button onClick={() => removeItem(item)}>Del</button>
           </div>
         </div>
       </div>
@@ -375,7 +399,7 @@ export default function Home() {
 
   return (
     <div className="absolute w-full h-full overflow-hidden">
-      <section className="relative flex flex-col h-full w-full">
+      <div className="relative flex flex-col h-full w-full">
         <header className="p-3">
           <h2>Analisador de Hierarquia de Palavras</h2>
           <div className="space-x-2">
@@ -384,11 +408,11 @@ export default function Home() {
               onChange={(event) => setName(event.target.value)}
               type="text"
               placeholder="Nome do item"
-              className="border border-black rounded-sm p-1"
+              className="border rounded-sm p-1"
             ></input>
             <button
               onClick={() => {
-                createItem({ id: self.crypto.randomUUID(), name, items: [] });
+                createItem({ id: uuidv4(), name, items: [] });
               }}
             >
               Criar
@@ -396,22 +420,7 @@ export default function Home() {
           </div>
         </header>
 
-        <div className=" h-full overflow-auto p-3">
-          <div className="border border-black rounded overflow-hidden mt-2 min-h-[200px] relative">
-            <textarea
-              className="w-full h-full absolute p-3"
-              readOnly
-              value={JSON.stringify(json, null, 4)}
-            ></textarea>
-          </div>
-          <button
-            className="mb-2"
-            onClick={() => {
-              createItem({ name: "...", items: [] });
-            }}
-          >
-            +
-          </button>
+        <section className=" h-full overflow-auto p-3">
           <DndProvider backend={backend}>
             <DraggableItems
               items={items}
@@ -423,7 +432,7 @@ export default function Home() {
               createItem={createItem}
             ></DraggableItems>
           </DndProvider>
-        </div>
+        </section>
 
         <footer className="p-3">
           <div className="space-x-2">
@@ -431,7 +440,7 @@ export default function Home() {
             <button onClick={download}>Baixar Arquivo JSON</button>
           </div>
         </footer>
-      </section>
+      </div>
     </div>
   );
 }

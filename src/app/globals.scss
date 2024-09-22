@@ -26,23 +26,56 @@ body {
 
 @layer components {
   button {
-    @apply bg-orange-500 text-white rounded px-2;
+    @apply bg-black text-white rounded px-2 min-h-8;
   }
 
   .tree {
+    &-item {
+      @apply flex w-full my-1.5 h-9;
+      & + .tree {
+        @apply hidden;
+      }
+      &-expanded {
+        & + .tree {
+          @apply block;
+        }
+      }
+      & ~ .tree {
+        &-item {
+          @apply relative;
+          &::before {
+            @apply absolute bg-gray-600 h-px w-8 left-5;
+            content: "";
+          }
+        }
+      }
+    }
     &-wrapper {
-      @apply flex bg-slate-200 border border-slate-700 space-x-3;
+      @apply flex w-full;
+      button {
+        @apply rounded-none min-w-9 border-0;
+      }
+    }
+    &-childrenButton {
+      @apply bg-transparent text-inherit;
     }
     &-name {
-      @apply w-full bg-yellow-300 border-l;
+      @apply w-full border border-gray-600;
+      input {
+        @apply w-full h-full py-1 px-2 border-0 font-semibold text-sm;
+        &:focus {
+          @apply border-0 shadow-none outline-none bg-gray-200;
+        }
+      }
     }
     &-actions {
-      @apply flex space-x-2;
+      @apply flex;
     }
     .tree {
-      @apply pl-10;
-      .tree-wrapper {
-        @apply border-t-0;
+      @apply pl-10 relative;
+      &::before {
+        @apply absolute bg-gray-600 h-full w-px left-5;
+        content: "";
       }
     }
   }
