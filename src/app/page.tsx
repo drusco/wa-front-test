@@ -1,11 +1,15 @@
 "use client";
 
-import { Fragment, useEffect, useState } from "react";
+import { Dispatch, Fragment, SetStateAction, useEffect, useState } from "react";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
+import { TouchBackend } from "react-dnd-touch-backend";
+import { isMobile } from "react-device-detect";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
+const backend = isMobile ? TouchBackend : HTML5Backend;
+
 interface Item {
-  id: string;
+  id?: string;
   name: string;
   items: Item[];
 }
@@ -19,6 +23,9 @@ interface DraggableItems {
   moveItem: (draggedItem: Item, targetItem?: Item) => void;
   removeItem: (item: Item) => boolean;
   orderItem: (item: Item, indexOffset: number) => void;
+  findParent: (item: Item, fromArray?: Item[]) => Item | void;
+  createItem: (item: Item, parent?: Item) => void;
+  setItems: Dispatch<SetStateAction<Item[]>>;
 }
 
 interface DraggableItem {
@@ -26,6 +33,9 @@ interface DraggableItem {
   moveItem: (draggedItem: Item, targetItem?: Item) => void;
   removeItem: (item: Item) => boolean;
   orderItem: (item: Item, indexOffset: number) => void;
+  findParent: (item: Item, fromArray?: Item[]) => Item | void;
+  createItem: (item: Item, parent?: Item) => void;
+  setItems: Dispatch<SetStateAction<Item[]>>;
 }
 
 const DraggableItems: React.FC<DraggableItems> = ({
@@ -33,6 +43,9 @@ const DraggableItems: React.FC<DraggableItems> = ({
   moveItem,
   removeItem,
   orderItem,
+  findParent,
+  createItem,
+  setItems,
 }) => {
   return (
     <div className="tree">
@@ -43,6 +56,9 @@ const DraggableItems: React.FC<DraggableItems> = ({
           moveItem={moveItem}
           removeItem={removeItem}
           orderItem={orderItem}
+          findParent={findParent}
+          setItems={setItems}
+          createItem={createItem}
         />
       ))}
     </div>
@@ -54,6 +70,9 @@ const DraggableItem: React.FC<DraggableItem> = ({
   moveItem,
   removeItem,
   orderItem,
+  findParent,
+  createItem,
+  setItems,
 }) => {
   const [{ isDragging }, drag] = useDrag(() => ({
     type: "item",
@@ -71,9 +90,42 @@ const DraggableItem: React.FC<DraggableItem> = ({
 
   const [, drop] = useDrop(() => ({
     accept: "item",
-    drop: (draggedItem: Item) => {
+    drop: (draggedItem: Item, monitor) => {
+      const movement = monitor.getDifferenceFromInitialOffset();
+      if (!movement) {
+        return;
+      }
       if (draggedItem !== item) {
-        moveItem(draggedItem, item);
+        console.log("**", movement);
+        if (movement.x >= 20) {
+          moveItem(draggedItem, item);
+        } else {
+          let offset: number | null = null;
+          setItems((items) => {
+            const draggedItemParent = findParent(draggedItem);
+            const dropItemParent = findParent(item);
+
+            if (draggedItemParent === dropItemParent) {
+              const parent = dropItemParent?.items ?? items;
+              const indexOfDraggedItem = parent.indexOf(draggedItem);
+              const indexOfDropItem = parent.indexOf(item);
+
+              console.log({ indexOfDraggedItem, indexOfDropItem });
+
+              if (movement.y < 0) {
+                offset = indexOfDropItem - indexOfDraggedItem;
+              } else {
+                offset = indexOfDraggedItem + indexOfDropItem;
+              }
+            }
+
+            return items;
+          });
+
+          if (offset !== null) {
+            orderItem(draggedItem, offset);
+          }
+        }
       }
     },
   }));
@@ -82,14 +134,12 @@ const DraggableItem: React.FC<DraggableItem> = ({
     <Fragment>
       <div
         ref={(node) => drag(drop(node))}
-        style={{
-          opacity: isDragging ? 0.5 : 1,
-        }}
+        className={`tree-item ${isDragging ? "tree-item-dragging" : ""}`}
       >
         <div className="tree-wrapper">
           <button
             onClick={() => {
-              moveItem(
+              createItem(
                 { id: self.crypto.randomUUID(), name: "New Item", items: [] },
                 item
               );
@@ -114,6 +164,9 @@ const DraggableItem: React.FC<DraggableItem> = ({
               moveItem={moveItem}
               removeItem={removeItem}
               orderItem={orderItem}
+              findParent={findParent}
+              setItems={setItems}
+              createItem={createItem}
             />
           ))}
         </div>
@@ -142,45 +195,53 @@ export default function Home() {
   };
 
   const moveItem = (draggedItem: Item, targetItem?: Item): void => {
-    console.log("-----------------\n\r", items);
+    setItems((items) => {
+      console.log("-----------------\n\r", items);
 
-    console.log("move", draggedItem.name, "to", targetItem?.name);
+      console.log("move", draggedItem.name, "to", targetItem?.name);
 
-    if (draggedItem === targetItem) {
-      console.log("cancelled: dragged item equals target item");
-      return;
-    }
+      if (draggedItem === targetItem) {
+        console.log("cancelled: dragged item equals target item");
+        return items;
+      }
 
-    if (targetItem && isDescendant(draggedItem, targetItem)) {
-      console.log("cancelled: prevent circular references");
-      return;
-    }
+      if (targetItem && isDescendant(draggedItem, targetItem)) {
+        console.log("cancelled: prevent circular references");
+        return items;
+      }
 
-    const updatedItems = [...items];
+      const updatedItems = [...items];
 
-    const parent = findParent(draggedItem, updatedItems);
+      const parent = findParent(draggedItem, updatedItems);
 
-    if (!parent && !targetItem) {
-      return;
-    }
+      if (!parent && !targetItem) {
+        console.log("dragged item is on root already");
+        return items;
+      }
 
-    if (targetItem && targetItem.items.includes(draggedItem)) {
-      return;
-    }
+      if (targetItem && targetItem.items.includes(draggedItem)) {
+        console.log(draggedItem.name, "is already child of", targetItem.name);
+        return items;
+      }
 
-    removeItem(draggedItem, updatedItems);
+      console.log(
+        "before removeItem",
+        JSON.parse(JSON.stringify(updatedItems))
+      );
+      removeItem(draggedItem, updatedItems);
 
-    if (targetItem) {
-      targetItem.items = [...targetItem.items, draggedItem];
-      console.log("added", draggedItem.name, "to target.items");
-    } else {
-      console.log("added", draggedItem.name, "to root items");
-      updatedItems.push(draggedItem);
-    }
+      if (targetItem) {
+        targetItem.items.push(draggedItem);
+        console.log("added", draggedItem.name, "to target.items");
+      } else {
+        console.log("added", draggedItem.name, "to root items");
+        updatedItems.push(draggedItem);
+      }
 
-    console.log("final", JSON.parse(JSON.stringify(updatedItems)));
+      console.log("final", JSON.parse(JSON.stringify(updatedItems)));
 
-    setItems(updatedItems);
+      return updatedItems;
+    });
   };
 
   const createItem = (item: Item, parent?: Item): void => {
@@ -195,7 +256,7 @@ export default function Home() {
     }
 
     setName("");
-    setItems(items);
+    setItems([...items]);
   };
 
   const saveData = (): void => {
@@ -209,29 +270,27 @@ export default function Home() {
 
   const removeItem = (item: Item, fromArray?: Item[]): boolean => {
     const itemList = fromArray ?? items;
-
-    const index = itemList.findIndex((entry) => entry === item);
+    const index = itemList.findIndex((entry) => entry.id === item.id);
+    let result = false;
 
     if (index >= 0) {
       const [removedItem] = itemList.splice(index, 1);
-      console.log("removed", removedItem.name, "from root");
-      if (!fromArray) {
-        setItems([...itemList]);
-      }
-      return true;
-    }
-
-    for (const child of itemList) {
-      if (removeItem(item, child.items)) {
-        console.log("removed", item.name, "from", child.name);
-        if (!fromArray) {
-          setItems([...itemList]);
+      console.log("removed", removedItem.name, "from", itemList === fromArray);
+      result = true;
+    } else {
+      for (const child of itemList) {
+        if (removeItem(item, child.items)) {
+          console.log("removed", item.name, "from", child.name);
+          result = true;
         }
-        return true;
       }
     }
 
-    return false;
+    if (!fromArray) {
+      setItems([...itemList]);
+    }
+
+    return result;
   };
 
   const findParent = (item: Item, fromArray?: Item[]): Item | void => {
@@ -249,38 +308,54 @@ export default function Home() {
   };
 
   const orderItem = (item: Item, indexOffset: number): void => {
-    const parent = findParent(item);
-    const fromArray = parent ? [...parent.items] : [...items];
-    const index = fromArray.indexOf(item);
+    setItems((items) => {
+      const parent = findParent(item);
+      const fromArray = parent ? parent.items : [...items];
+      const index = fromArray.indexOf(item);
 
-    if (index < 0) {
-      return;
+      if (index < 0) {
+        return items;
+      }
+
+      let newIndex = index + indexOffset;
+
+      if (newIndex < 0) {
+        newIndex = 0;
+      }
+
+      if (newIndex >= fromArray.length) {
+        newIndex = fromArray.length - 1;
+      }
+
+      console.log("new index", index, "=>", newIndex);
+
+      fromArray.splice(index, 1);
+      fromArray.splice(newIndex, 0, item);
+
+      if (parent) {
+        return [...items];
+      } else {
+        return fromArray;
+      }
+    });
+  };
+
+  const formatData = (items: Item[]): Item[] => {
+    for (const item of items) {
+      delete item.id;
+      formatData(item.items);
     }
-
-    let newIndex = index + indexOffset;
-
-    if (newIndex < 0) {
-      newIndex = 0;
-    }
-
-    if (newIndex >= fromArray.length) {
-      newIndex = fromArray.length - 1;
-    }
-
-    fromArray.splice(index, 1);
-    fromArray.splice(newIndex, 0, item);
-
-    if (parent) {
-      parent.items = fromArray;
-    } else {
-      setItems(fromArray);
-    }
+    return items;
   };
 
   const download = (): void => {
     updateData();
 
-    const blob = new Blob([JSON.stringify(json, null, 4)], {
+    const formattedData: Data = {
+      data: formatData(JSON.parse(JSON.stringify(json.data))),
+    };
+
+    const blob = new Blob([JSON.stringify(formattedData, null, 4)], {
       type: "application/json",
     });
     const url = URL.createObjectURL(blob);
@@ -299,46 +374,64 @@ export default function Home() {
   }, [items]);
 
   return (
-    <section className="p-2">
-      <div className="space-x-2">
-        <input
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-          type="text"
-          placeholder="Nome do item"
-          className="border border-black rounded-sm p-1"
-        ></input>
-        <button
-          onClick={() => {
-            createItem({ id: self.crypto.randomUUID(), name, items: [] });
-          }}
-        >
-          Criar
-        </button>
-      </div>
-      <div className="border border-black rounded overflow-hidden mt-2 min-h-[200px] relative">
-        <textarea
-          className="w-full h-full absolute p-3"
-          readOnly
-          value={JSON.stringify(json, null, 4)}
-        ></textarea>
-      </div>
+    <div className="absolute w-full h-full overflow-hidden">
+      <section className="relative flex flex-col h-full w-full">
+        <header className="p-3">
+          <h2>Analisador de Hierarquia de Palavras</h2>
+          <div className="space-x-2">
+            <input
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              type="text"
+              placeholder="Nome do item"
+              className="border border-black rounded-sm p-1"
+            ></input>
+            <button
+              onClick={() => {
+                createItem({ id: self.crypto.randomUUID(), name, items: [] });
+              }}
+            >
+              Criar
+            </button>
+          </div>
+        </header>
 
-      <div className="mt-4">
-        <DndProvider backend={HTML5Backend}>
-          <DraggableItems
-            items={items}
-            removeItem={removeItem}
-            moveItem={moveItem}
-            orderItem={orderItem}
-          ></DraggableItems>
-        </DndProvider>
-      </div>
+        <div className=" h-full overflow-auto p-3">
+          <div className="border border-black rounded overflow-hidden mt-2 min-h-[200px] relative">
+            <textarea
+              className="w-full h-full absolute p-3"
+              readOnly
+              value={JSON.stringify(json, null, 4)}
+            ></textarea>
+          </div>
+          <button
+            className="mb-2"
+            onClick={() => {
+              createItem({ name: "...", items: [] });
+            }}
+          >
+            +
+          </button>
+          <DndProvider backend={backend}>
+            <DraggableItems
+              items={items}
+              removeItem={removeItem}
+              moveItem={moveItem}
+              orderItem={orderItem}
+              findParent={findParent}
+              setItems={setItems}
+              createItem={createItem}
+            ></DraggableItems>
+          </DndProvider>
+        </div>
 
-      <div className="mt-4 space-x-2">
-        <button onClick={saveData}>Salvar</button>
-        <button onClick={download}>Baixar Arquivo JSON</button>
-      </div>
-    </section>
+        <footer className="p-3">
+          <div className="space-x-2">
+            <button onClick={saveData}>Salvar</button>
+            <button onClick={download}>Baixar Arquivo JSON</button>
+          </div>
+        </footer>
+      </section>
+    </div>
   );
 }
