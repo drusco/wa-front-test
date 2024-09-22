@@ -5,6 +5,12 @@ import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { TouchBackend } from "react-dnd-touch-backend";
 import { isMobile } from "react-device-detect";
 import { HTML5Backend } from "react-dnd-html5-backend";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faCaretRight,
+  faCaretDown,
+  faCaretUp,
+} from "@fortawesome/free-solid-svg-icons";
 import { v4 as uuidv4 } from "uuid";
 
 const backend = isMobile ? TouchBackend : HTML5Backend;
@@ -91,8 +97,8 @@ const DraggableItem: React.FC<DraggableItem> = ({
   }));
 
   useEffect(() => {
-    setShowChildren(!item.items.length);
-  }, [item.items]);
+    setShowChildren(!!item.items.length);
+  }, [item]);
 
   const [, drop] = useDrop(() => ({
     accept: "item",
@@ -150,16 +156,20 @@ const DraggableItem: React.FC<DraggableItem> = ({
           <button
             className="tree-childrenButton"
             onClick={() => {
-              if (item.items.length) {
-                setShowChildren(!showChildren);
-              }
+              setShowChildren(!showChildren);
             }}
           >
-            {showChildren && item.items.length
-              ? "-"
-              : item.items.length
-              ? "+"
-              : "*"}
+            <span>
+              {showChildren && item.items.length > 0 && (
+                <FontAwesomeIcon icon={faCaretUp} width={7} />
+              )}
+              {!showChildren && item.items.length > 0 && (
+                <FontAwesomeIcon icon={faCaretDown} width={7} />
+              )}
+              {item.items.length === 0 && (
+                <FontAwesomeIcon icon={faCaretRight} width={5.5} />
+              )}
+            </span>
           </button>
 
           <div className="tree-name">
@@ -401,15 +411,27 @@ export default function Home() {
     <div className="absolute w-full h-full overflow-hidden">
       <div className="relative flex flex-col h-full w-full">
         <header className="p-3">
-          <h2>Analisador de Hierarquia de Palavras</h2>
-          <div className="space-x-2">
-            <input
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              type="text"
-              placeholder="Nome do item"
-              className="border rounded-sm p-1"
-            ></input>
+          <h2 className="text-lg font-bold">
+            Criador de Hierarquia de Palavras
+          </h2>
+          <p>...</p>
+        </header>
+
+        <section className="h-full overflow-auto p-3">
+          <div className="flex bg-white mb-4 rounded p-3">
+            <div className="w-full">
+              <label htmlFor="item-name" className="text-sm mb-1">
+                Nome do item
+              </label>
+              <input
+                id="item-name"
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                type="text"
+                placeholder="Nome"
+                className="border w-full border-gray-600 rounded p-1 placeholder:text-sm"
+              ></input>
+            </div>
             <button
               onClick={() => {
                 createItem({ id: uuidv4(), name, items: [] });
@@ -418,9 +440,6 @@ export default function Home() {
               Criar
             </button>
           </div>
-        </header>
-
-        <section className=" h-full overflow-auto p-3">
           <DndProvider backend={backend}>
             <DraggableItems
               items={items}
@@ -434,7 +453,7 @@ export default function Home() {
           </DndProvider>
         </section>
 
-        <footer className="p-3">
+        <footer className="bg-white p-3 border-t border-gray-300">
           <div className="space-x-2">
             <button onClick={saveData}>Salvar</button>
             <button onClick={download}>Baixar Arquivo JSON</button>

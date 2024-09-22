@@ -41,28 +41,31 @@ body {
         }
       }
       & ~ .tree {
-        &-item {
-          @apply relative;
-          &::before {
-            @apply absolute bg-gray-600 h-px w-8 left-5;
-            content: "";
+        > .tree {
+          &-item {
+            @apply relative;
+            &::before {
+              @apply absolute bg-gray-600 h-0.5 w-8 left-0 top-1/2 -ml-5;
+              content: "";
+              margin-top: -1px;
+            }
           }
         }
       }
     }
     &-wrapper {
       @apply flex w-full;
-      button {
-        @apply rounded-none min-w-9 border-0;
-      }
     }
     &-childrenButton {
-      @apply bg-transparent text-inherit;
+      @apply bg-transparent text-inherit min-w-10 p-0 flex items-center justify-center;
+      > span {
+        @apply flex w-4 h-4 text-gray-600 z-10 border-2 border-gray-600 items-center justify-center rounded-full;
+      }
     }
     &-name {
       @apply w-full border border-gray-600;
       input {
-        @apply w-full h-full py-1 px-2 border-0 font-semibold text-sm;
+        @apply w-full h-full py-1 px-2 border-0 font-semibold text-sm text-ellipsis;
         &:focus {
           @apply border-0 shadow-none outline-none bg-gray-200;
         }
@@ -74,8 +77,10 @@ body {
     .tree {
       @apply pl-10 relative;
       &::before {
-        @apply absolute bg-gray-600 h-full w-px left-5;
+        @apply absolute bg-gray-600 w-0.5 left-5 top-0 -mt-4;
         content: "";
+        height: calc(100% + 1rem);
+        margin-left: -1px;
       }
     }
   }
