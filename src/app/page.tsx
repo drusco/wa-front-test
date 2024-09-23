@@ -2,8 +2,6 @@
 
 import { Dispatch, Fragment, SetStateAction, useEffect, useState } from "react";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
-import { TouchBackend } from "react-dnd-touch-backend";
-import { isMobile } from "react-device-detect";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -17,8 +15,6 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { v4 as uuidv4 } from "uuid";
 import React from "react";
-
-const backend = isMobile ? TouchBackend : HTML5Backend;
 
 interface Item {
   id?: string;
@@ -514,7 +510,7 @@ export default function Home() {
               </header>
 
               <section className="flex h-full m-3 mt-0 p-3 pl-0 overflow-auto">
-                <DndProvider backend={backend}>
+                <DndProvider backend={HTML5Backend}>
                   <DraggableItems
                     items={items}
                     removeItem={removeItem}
