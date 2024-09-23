@@ -49,6 +49,8 @@ interface DraggableItem {
   setItems: Dispatch<SetStateAction<Item[]>>;
   switchItem: (movement: XYCoord, draggedItem: Item, item: Item) => void;
   setMovingItem: Dispatch<SetStateAction<Item | null>>;
+  setCurrentItem: Dispatch<SetStateAction<Item | null>>;
+  currentItem: Item | null;
 }
 
 const DraggableItems: React.FC<DraggableItems> = ({
@@ -62,9 +64,7 @@ const DraggableItems: React.FC<DraggableItems> = ({
   switchItem,
 }) => {
   const [movingItem, setMovingItem] = useState<Item | null>(null);
-  const moveItemFromClick = (from: Item, to: Item): void => {
-    moveItem(from, to);
-  };
+  const [currentItem, setCurrentItem] = useState<Item | null>(null);
   return (
     <div className="tree">
       {movingItem ? "yes" : "no"}
@@ -72,6 +72,7 @@ const DraggableItems: React.FC<DraggableItems> = ({
         <DraggableItem
           key={item.id}
           item={item}
+          currentItem={currentItem}
           moveItem={moveItem}
           removeItem={removeItem}
           orderItem={orderItem}
@@ -80,6 +81,7 @@ const DraggableItems: React.FC<DraggableItems> = ({
           createItem={createItem}
           switchItem={switchItem}
           setMovingItem={setMovingItem}
+          setCurrentItem={setCurrentItem}
         />
       ))}
     </div>
@@ -96,6 +98,8 @@ const DraggableItem: React.FC<DraggableItem> = ({
   setItems,
   switchItem,
   setMovingItem,
+  setCurrentItem,
+  currentItem,
 }) => {
   const [showChildren, setShowChildren] = useState<boolean>(true);
   const [openItem, setOpenItem] = useState<boolean>(false);
@@ -118,6 +122,18 @@ const DraggableItem: React.FC<DraggableItem> = ({
       setClicked(false);
     }
   }, [clicked]);
+
+  useEffect(() => {
+    if (openItem) {
+      setCurrentItem(item);
+    }
+  }, [openItem]);
+
+  useEffect(() => {
+    if (currentItem !== item) {
+      setOpenItem(false);
+    }
+  }, [currentItem]);
 
   const [{ isDragging }, drag] = useDrag(() => ({
     type: "item",
@@ -265,7 +281,7 @@ const DraggableItem: React.FC<DraggableItem> = ({
               {showSubitemForm && (
                 <section className="">
                   <div className="flex items-end">
-                    <div className="w-[calc(50%-7rem)] text-gray-700">
+                    <div className="w-1/2 text-gray-700">
                       <label
                         htmlFor={`${item.id}-subitem-name`}
                         className="text-sm font-semibold mb-2 block"
