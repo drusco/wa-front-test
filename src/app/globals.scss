@@ -13,7 +13,7 @@
 }
 
 body {
-  color: #202020;
+  @apply text-gray-900;
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
 }
@@ -25,61 +25,112 @@ body {
 }
 
 @layer components {
+  * {
+    @apply transition-all duration-100;
+  }
+
   button {
-    @apply bg-black text-white rounded px-2 min-h-8;
+    @apply bg-gray-200 text-gray-900 rounded px-2 min-h-8 duration-0;
+    &:hover,
+    &:focus {
+      @apply bg-gray-900 text-white;
+    }
   }
 
   .tree {
+    @apply w-fit sm:w-full;
+
     &-item {
-      @apply flex w-full my-1.5 h-9;
+      @apply flex w-full my-1.5;
+      &-dragging {
+        > .tree-wrapper {
+          @apply opacity-50;
+        }
+      }
       & + .tree {
         @apply hidden;
       }
       &-expanded {
+        @apply relative;
+        &::after {
+          @apply absolute h-full bg-gray-600 w-0.5 left-5 top-6;
+          content: "";
+          margin-left: -1px;
+        }
         & + .tree {
           @apply block;
         }
+      }
+      &-name {
+        @apply flex flex-1 border border-gray-600 rounded-l border-r-0 overflow-hidden min-w-32 h-9;
+        input {
+          @apply w-full h-full py-1 px-2 border-0 font-semibold text-sm text-ellipsis;
+          &:focus {
+            @apply border-0 shadow-none outline-none bg-gray-200;
+            + .tree-item-draggable {
+              @apply pr-3;
+            }
+          }
+        }
+        > .tree-item-draggable {
+          @apply -order-1;
+        }
+      }
+      &-draggable {
+        @apply flex items-center justify-center text-gray-400 cursor-move px-3 pr-1 h-full;
+        &::before {
+          content: "";
+          @apply w-1.5 h-3 border-x-2 border-gray-600 border-dotted;
+        }
+      }
+      &-options {
+        @apply bg-white my-2 p-2 border border-gray-300 rounded;
       }
       & ~ .tree {
         > .tree {
           &-item {
             @apply relative;
             &::before {
-              @apply absolute bg-gray-600 h-0.5 w-8 left-0 top-1/2 -ml-5;
+              @apply absolute bg-gray-600 h-0.5 w-8 left-0 top-4 -ml-5;
               content: "";
-              margin-top: -1px;
             }
           }
         }
       }
     }
     &-wrapper {
-      @apply flex w-full;
+      @apply flex w-full bg-white;
+      &-outer {
+        @apply flex-col w-full;
+      }
     }
     &-childrenButton {
-      @apply bg-transparent text-inherit min-w-10 p-0 flex items-center justify-center;
+      @apply bg-transparent h-9 text-inherit min-w-10 p-0 flex items-center justify-center;
       > span {
         @apply flex w-4 h-4 text-gray-600 z-10 border-2 border-gray-600 items-center justify-center rounded-full;
       }
-    }
-    &-name {
-      @apply w-full border border-gray-600;
-      input {
-        @apply w-full h-full py-1 px-2 border-0 font-semibold text-sm text-ellipsis;
-        &:focus {
-          @apply border-0 shadow-none outline-none bg-gray-200;
-        }
+      &:hover,
+      &:focus {
+        @apply bg-transparent;
       }
     }
+
     &-actions {
-      @apply flex;
+      @apply flex rounded-r overflow-hidden border border-l-0 border-gray-600;
+      button {
+        @apply border-l border-gray-600 flex rounded-none items-center justify-center bg-white p-0 text-inherit min-w-9 min-h-0;
+        &:focus,
+        &:hover {
+          @apply bg-black text-white;
+        }
+      }
     }
     .tree {
       @apply pl-10 relative;
       &::before {
-        @apply absolute bg-gray-600 w-0.5 left-5 top-0 -mt-4;
+        @apply absolute bg-gray-600 w-0.5 left-5 top-4;
         content: "";
-        height: calc(100% + 1rem);
+        height: calc(100% - 1rem);
         margin-left: -1px;
       }
     }

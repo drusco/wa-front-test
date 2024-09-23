@@ -9,9 +9,16 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCaretRight,
   faCaretDown,
-  faCaretUp,
+  faCircle,
+  faCircleDown,
+  faBars,
+  faXmark,
+  faLayerGroup,
+  faChevronDown,
+  faChevronUp,
 } from "@fortawesome/free-solid-svg-icons";
 import { v4 as uuidv4 } from "uuid";
+import React from "react";
 
 const backend = isMobile ? TouchBackend : HTML5Backend;
 
@@ -82,6 +89,7 @@ const DraggableItem: React.FC<DraggableItem> = ({
   setItems,
 }) => {
   const [showChildren, setShowChildren] = useState<boolean>(true);
+  const [openItem, setOpenItem] = useState<boolean>(false);
   const [{ isDragging }, drag] = useDrag(() => ({
     type: "item",
     item,
@@ -103,90 +111,136 @@ const DraggableItem: React.FC<DraggableItem> = ({
   const [, drop] = useDrop(() => ({
     accept: "item",
     drop: (draggedItem: Item, monitor) => {
-      const movement = monitor.getDifferenceFromInitialOffset();
-      if (!movement) {
+      if (draggedItem === item) {
         return;
       }
-      if (draggedItem !== item) {
-        console.log("**", movement);
-        if (movement.x >= 20) {
-          moveItem(draggedItem, item);
-          setShowChildren(true);
-        } else {
-          let offset: number | null = null;
-          setItems((items) => {
-            const draggedItemParent = findParent(draggedItem);
-            const dropItemParent = findParent(item);
 
-            if (draggedItemParent === dropItemParent) {
-              const parent = dropItemParent?.items ?? items;
-              const indexOfDraggedItem = parent.indexOf(draggedItem);
-              const indexOfDropItem = parent.indexOf(item);
+      const movement = monitor.getDifferenceFromInitialOffset();
+      const draggedPosition = monitor.getClientOffset();
+      const targetPosition = getTargetClientPosition();
 
-              console.log({ indexOfDraggedItem, indexOfDropItem });
+      if (!movement || !draggedPosition || !targetPosition) {
+        return;
+      }
 
-              if (movement.y < 0) {
-                offset = indexOfDropItem - indexOfDraggedItem;
-              } else {
-                offset = indexOfDraggedItem + indexOfDropItem;
-              }
+      const movementX = targetPosition.x + 20;
+
+      console.log("----", draggedPosition.x, ">", movementX);
+
+      console.log("**", movement);
+
+      if (movement.x >= 20) {
+        moveItem(draggedItem, item);
+        setShowChildren(true);
+      } else {
+        let offset: number | null = null;
+        setItems((items) => {
+          const draggedItemParent = findParent(draggedItem);
+          const dropItemParent = findParent(item);
+
+          if (draggedItemParent === dropItemParent) {
+            const parent = dropItemParent?.items ?? items;
+            const indexOfDraggedItem = parent.indexOf(draggedItem);
+            const indexOfDropItem = parent.indexOf(item);
+
+            console.log({ indexOfDraggedItem, indexOfDropItem });
+
+            if (movement.y < 0) {
+              offset = indexOfDropItem - indexOfDraggedItem;
+            } else {
+              offset = indexOfDraggedItem + indexOfDropItem;
             }
-
-            return items;
-          });
-
-          if (offset !== null) {
-            orderItem(draggedItem, offset);
           }
+
+          return items;
+        });
+
+        if (offset !== null) {
+          orderItem(draggedItem, offset);
         }
       }
     },
   }));
 
+  const getTargetClientPosition = () => {
+    if (dropTargetRef.current) {
+      const rect = dropTargetRef.current.getBoundingClientRect();
+      return { x: rect.left, y: rect.top };
+    }
+    return null;
+  };
+
+  const dropTargetRef = React.useRef<HTMLDivElement | null>(null);
+
   return (
     <Fragment>
       <div
-        ref={(node) => drag(drop(node))}
         className={`tree-item 
           ${isDragging ? "tree-item-dragging" : ""} 
-          ${showChildren ? "tree-item-expanded" : ""}
+          ${showChildren && item.items.length ? "tree-item-expanded" : ""}
         `}
       >
-        <div className="tree-wrapper">
-          <button
-            className="tree-childrenButton"
-            onClick={() => {
-              setShowChildren(!showChildren);
+        <button
+          className="tree-childrenButton"
+          onClick={() => {
+            setShowChildren(!showChildren);
+          }}
+        >
+          <span>
+            {showChildren && item.items.length > 0 && (
+              <FontAwesomeIcon icon={faCaretDown} width={7} />
+            )}
+            {!showChildren && item.items.length > 0 && (
+              <FontAwesomeIcon icon={faCaretRight} width={5.5} />
+            )}
+            {item.items.length === 0 && (
+              <FontAwesomeIcon icon={faCircle} width={5} />
+            )}
+          </span>
+        </button>
+        <div className="tree-wrapper-outer">
+          <div
+            className="tree-wrapper"
+            ref={(node) => {
+              drag(drop(node));
+              dropTargetRef.current = node;
             }}
           >
-            <span>
-              {showChildren && item.items.length > 0 && (
-                <FontAwesomeIcon icon={faCaretUp} width={7} />
-              )}
-              {!showChildren && item.items.length > 0 && (
-                <FontAwesomeIcon icon={faCaretDown} width={7} />
-              )}
-              {item.items.length === 0 && (
-                <FontAwesomeIcon icon={faCaretRight} width={5.5} />
-              )}
-            </span>
-          </button>
-
-          <div className="tree-name">
-            <input
-              type="text"
-              value={item.name}
-              onChange={(e) => {
-                item.name = e.target.value;
-                setItems((items) => [...items]);
-              }}
-            />
+            <div className="tree-item-name">
+              <input
+                type="text"
+                value={item.name}
+                onChange={(e) => {
+                  item.name = e.target.value;
+                  setItems((items) => [...items]);
+                }}
+              />
+              <span className="tree-item-draggable"></span>
+            </div>
+            <div className="tree-actions">
+              <button onClick={() => setOpenItem(!openItem)}>
+                {openItem && <FontAwesomeIcon icon={faChevronUp} width={14} />}
+                {!openItem && (
+                  <FontAwesomeIcon icon={faChevronDown} width={14} />
+                )}
+              </button>
+              <button onClick={() => removeItem(item)}>
+                <FontAwesomeIcon icon={faXmark} width={12} />
+              </button>
+            </div>
           </div>
-          <div className="tree-actions">
-            <button onClick={() => orderItem(item, -1)}>-</button>
-            <button onClick={() => orderItem(item, 1)}>+</button>
-            <button onClick={() => removeItem(item)}>Del</button>
-          </div>
+          {openItem && (
+            <div className="tree-item-options">
+              <button
+                onClick={() => {
+                  createItem({ id: uuidv4(), name: "", items: [] }, item);
+                  setShowChildren(true);
+                }}
+              >
+                Criar Subitem
+              </button>
+            </div>
+          )}
         </div>
       </div>
       {item.items.length > 0 && (
@@ -230,8 +284,6 @@ export default function Home() {
 
   const moveItem = (draggedItem: Item, targetItem?: Item): void => {
     setItems((items) => {
-      console.log("-----------------\n\r", items);
-
       console.log("move", draggedItem.name, "to", targetItem?.name);
 
       if (draggedItem === targetItem) {
@@ -279,10 +331,6 @@ export default function Home() {
   };
 
   const createItem = (item: Item, parent?: Item): void => {
-    if (!item.name) {
-      return;
-    }
-
     if (parent) {
       parent.items.push(item);
     } else {
@@ -417,10 +465,10 @@ export default function Home() {
           <p>...</p>
         </header>
 
-        <section className="h-full overflow-auto p-3">
-          <div className="flex bg-white mb-4 rounded p-3">
+        <section className="h-full overflow-auto p-3 m-2">
+          <div className="flex bg-white mb-4 rounded p-2">
             <div className="w-full">
-              <label htmlFor="item-name" className="text-sm mb-1">
+              <label htmlFor="item-name" className="text-sm mb-2">
                 Nome do item
               </label>
               <input
@@ -428,8 +476,7 @@ export default function Home() {
                 value={name}
                 onChange={(event) => setName(event.target.value)}
                 type="text"
-                placeholder="Nome"
-                className="border w-full border-gray-600 rounded p-1 placeholder:text-sm"
+                className="border w-full p-2 border-gray-600 rounded placeholder:text-sm"
               ></input>
             </div>
             <button
@@ -456,7 +503,10 @@ export default function Home() {
         <footer className="bg-white p-3 border-t border-gray-300">
           <div className="space-x-2">
             <button onClick={saveData}>Salvar</button>
-            <button onClick={download}>Baixar Arquivo JSON</button>
+            <button onClick={download} className="space-x-2">
+              <FontAwesomeIcon icon={faCircleDown} width={14} />
+              <span>Baixar Arquivo JSON</span>
+            </button>
           </div>
         </footer>
       </div>
