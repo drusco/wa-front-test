@@ -48,6 +48,7 @@ interface DraggableItem {
   createItem: (item: Item, parent?: Item) => void;
   setItems: Dispatch<SetStateAction<Item[]>>;
   switchItem: (movement: XYCoord, draggedItem: Item, item: Item) => void;
+  setMovingItem: Dispatch<SetStateAction<Item | null>>;
 }
 
 const DraggableItems: React.FC<DraggableItems> = ({
@@ -60,8 +61,13 @@ const DraggableItems: React.FC<DraggableItems> = ({
   setItems,
   switchItem,
 }) => {
+  const [movingItem, setMovingItem] = useState<Item | null>(null);
+  const moveItemFromClick = (from: Item, to: Item): void => {
+    moveItem(from, to);
+  };
   return (
     <div className="tree">
+      {movingItem ? "yes" : "no"}
       {items.map((item) => (
         <DraggableItem
           key={item.id}
@@ -73,6 +79,7 @@ const DraggableItems: React.FC<DraggableItems> = ({
           setItems={setItems}
           createItem={createItem}
           switchItem={switchItem}
+          setMovingItem={setMovingItem}
         />
       ))}
     </div>
@@ -88,11 +95,29 @@ const DraggableItem: React.FC<DraggableItem> = ({
   createItem,
   setItems,
   switchItem,
+  setMovingItem,
 }) => {
   const [showChildren, setShowChildren] = useState<boolean>(true);
   const [openItem, setOpenItem] = useState<boolean>(false);
   const [subitemName, setSubitemName] = useState<string>("");
   const [showSubitemForm, setShowSubitemForm] = useState<boolean>(false);
+  const [clicked, setClicked] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (clicked) {
+      setMovingItem((movingItem) => {
+        if (movingItem) {
+          setTimeout(() => {
+            moveItem(movingItem, item);
+            setShowChildren(true);
+          });
+        }
+
+        return null;
+      });
+      setClicked(false);
+    }
+  }, [clicked]);
 
   const [{ isDragging }, drag] = useDrag(() => ({
     type: "item",
@@ -186,6 +211,9 @@ const DraggableItem: React.FC<DraggableItem> = ({
               drag(drop(node));
               dropTargetRef.current = node;
             }}
+            onClick={() => {
+              setClicked(true);
+            }}
           >
             <div className="tree-item-name">
               <input
@@ -213,12 +241,21 @@ const DraggableItem: React.FC<DraggableItem> = ({
               <section className="tree-item-options">
                 <button
                   onClick={() => {
-                    setShowSubitemForm(true);
+                    setShowSubitemForm(!showSubitemForm);
                   }}
                 >
                   <FontAwesomeIcon icon={faPlus} width={12} /> Subitem
                 </button>
-                <button>
+                <button
+                  onClick={() => {
+                    setMovingItem(item);
+                  }}
+                  onBlur={() => {
+                    setTimeout(() => {
+                      setMovingItem(null);
+                    }, 100);
+                  }}
+                >
                   <FontAwesomeIcon icon={faShare} width={12} /> Mover
                 </button>
                 <button onClick={() => removeItem(item)}>
@@ -228,7 +265,7 @@ const DraggableItem: React.FC<DraggableItem> = ({
               {showSubitemForm && (
                 <section className="">
                   <div className="flex items-end">
-                    <div className="w-full text-gray-700">
+                    <div className="w-[calc(50%-7rem)] text-gray-700">
                       <label
                         htmlFor={`${item.id}-subitem-name`}
                         className="text-sm font-semibold mb-2 block"
@@ -281,6 +318,8 @@ const DraggableItem: React.FC<DraggableItem> = ({
               findParent={findParent}
               setItems={setItems}
               createItem={createItem}
+              switchItem={switchItem}
+              setMovingItem={setMovingItem}
             />
           ))}
         </div>
@@ -525,7 +564,7 @@ export default function Home() {
               }}
               className="bg-transparent !text-inherit border hover:bg-slate-500 focus:bg-slate-500 !border-white"
             >
-              <FontAwesomeIcon icon={faBars} />
+              <FontAwesomeIcon icon={faBars} width={12} />
             </button>
             <h2 className="text-lg font-bold">
               Criador de Hierarquia de Palavras
