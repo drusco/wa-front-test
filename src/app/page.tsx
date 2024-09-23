@@ -7,13 +7,10 @@ import { isMobile } from "react-device-detect";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faCaretRight,
-  faCaretDown,
   faCircle,
   faCircleDown,
   faBars,
   faXmark,
-  faLayerGroup,
   faChevronDown,
   faChevronUp,
 } from "@fortawesome/free-solid-svg-icons";
@@ -178,6 +175,7 @@ const DraggableItem: React.FC<DraggableItem> = ({
         className={`tree-item 
           ${isDragging ? "tree-item-dragging" : ""} 
           ${showChildren && item.items.length ? "tree-item-expanded" : ""}
+          ${item.items.length && "tree-item-expandable"}
         `}
       >
         <button
@@ -188,13 +186,13 @@ const DraggableItem: React.FC<DraggableItem> = ({
         >
           <span>
             {showChildren && item.items.length > 0 && (
-              <FontAwesomeIcon icon={faCaretDown} width={7} />
+              <FontAwesomeIcon icon={faCircle} width={6} />
             )}
             {!showChildren && item.items.length > 0 && (
-              <FontAwesomeIcon icon={faCaretRight} width={5.5} />
+              <FontAwesomeIcon icon={faCircle} width={6} />
             )}
             {item.items.length === 0 && (
-              <FontAwesomeIcon icon={faCircle} width={5} />
+              <FontAwesomeIcon icon={faCircle} width={3} />
             )}
           </span>
         </button>
@@ -210,6 +208,7 @@ const DraggableItem: React.FC<DraggableItem> = ({
               <input
                 type="text"
                 value={item.name}
+                placeholder="Nome do item"
                 onChange={(e) => {
                   item.name = e.target.value;
                   setItems((items) => [...items]);
