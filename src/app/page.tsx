@@ -72,7 +72,6 @@ const DraggableItems: React.FC<DraggableItems> = ({
         <DraggableItem
           key={item.id}
           item={item}
-          currentItem={currentItem}
           moveItem={moveItem}
           removeItem={removeItem}
           orderItem={orderItem}
@@ -82,6 +81,7 @@ const DraggableItems: React.FC<DraggableItems> = ({
           switchItem={switchItem}
           setMovingItem={setMovingItem}
           setCurrentItem={setCurrentItem}
+          currentItem={currentItem}
         />
       ))}
     </div>
@@ -121,19 +121,19 @@ const DraggableItem: React.FC<DraggableItem> = ({
       });
       setClicked(false);
     }
-  }, [clicked]);
+  }, [clicked, item, moveItem, setMovingItem]);
 
   useEffect(() => {
     if (openItem) {
       setCurrentItem(item);
     }
-  }, [openItem]);
+  }, [openItem, setCurrentItem, item]);
 
   useEffect(() => {
     if (currentItem !== item) {
       setOpenItem(false);
     }
-  }, [currentItem]);
+  }, [currentItem, item]);
 
   const [{ isDragging }, drag] = useDrag(() => ({
     type: "item",
@@ -336,6 +336,8 @@ const DraggableItem: React.FC<DraggableItem> = ({
               createItem={createItem}
               switchItem={switchItem}
               setMovingItem={setMovingItem}
+              setCurrentItem={setCurrentItem}
+              currentItem={currentItem}
             />
           ))}
         </div>
