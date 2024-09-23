@@ -2,20 +2,26 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #eeeeee;
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
     --background: #eeeeee;
   }
-}
 
-body {
-  @apply text-gray-900;
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --background: #eeeeee;
+    }
+  }
+
+  body {
+    @apply text-gray-900;
+    background: var(--background);
+    font-family: Arial, Helvetica, sans-serif;
+  }
+
+  [disabled] {
+    @apply cursor-not-allowed opacity-80;
+  }
 }
 
 @layer utilities {
@@ -51,10 +57,10 @@ body {
   }
 
   .tree {
-    @apply w-fit sm:w-full;
+    @apply flex-1;
 
     &-item {
-      @apply flex w-full my-1.5;
+      @apply flex w-full mb-2;
 
       &-dragging {
         > .tree-wrapper {
@@ -84,7 +90,7 @@ body {
         @apply flex flex-1 border border-gray-600 rounded-l border-r-0 overflow-hidden min-w-32 h-9;
 
         input {
-          @apply w-full h-full py-1 px-2 border-0 font-semibold text-sm text-ellipsis;
+          @apply w-full h-full py-1 px-2 border-0 font-medium text-sm text-ellipsis;
 
           &:focus {
             @apply border-0 shadow-none outline-none bg-gray-200;
@@ -110,7 +116,9 @@ body {
       }
 
       &-options {
-        @apply bg-white my-2 p-2 border border-gray-300 rounded;
+        @apply my-2 text-sm space-x-1.5;
+        button {
+        }
       }
 
       & ~ .tree {

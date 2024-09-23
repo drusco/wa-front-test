@@ -1,7 +1,7 @@
 "use client";
 
 import { Dispatch, Fragment, SetStateAction, useEffect, useState } from "react";
-import { DndProvider, useDrag, useDrop } from "react-dnd";
+import { DndProvider, useDrag, useDrop, XYCoord } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -12,6 +12,8 @@ import {
   faChevronDown,
   faChevronUp,
   faSitemap,
+  faShare,
+  faPlus,
 } from "@fortawesome/free-solid-svg-icons";
 import { v4 as uuidv4 } from "uuid";
 import React from "react";
@@ -34,6 +36,7 @@ interface DraggableItems {
   findParent: (item: Item, fromArray?: Item[]) => Item | void;
   createItem: (item: Item, parent?: Item) => void;
   setItems: Dispatch<SetStateAction<Item[]>>;
+  switchItem: (movement: XYCoord, draggedItem: Item, item: Item) => void;
 }
 
 interface DraggableItem {
@@ -44,6 +47,7 @@ interface DraggableItem {
   findParent: (item: Item, fromArray?: Item[]) => Item | void;
   createItem: (item: Item, parent?: Item) => void;
   setItems: Dispatch<SetStateAction<Item[]>>;
+  switchItem: (movement: XYCoord, draggedItem: Item, item: Item) => void;
 }
 
 const DraggableItems: React.FC<DraggableItems> = ({
@@ -54,6 +58,7 @@ const DraggableItems: React.FC<DraggableItems> = ({
   findParent,
   createItem,
   setItems,
+  switchItem,
 }) => {
   return (
     <div className="tree">
@@ -67,6 +72,7 @@ const DraggableItems: React.FC<DraggableItems> = ({
           findParent={findParent}
           setItems={setItems}
           createItem={createItem}
+          switchItem={switchItem}
         />
       ))}
     </div>
@@ -81,9 +87,13 @@ const DraggableItem: React.FC<DraggableItem> = ({
   findParent,
   createItem,
   setItems,
+  switchItem,
 }) => {
   const [showChildren, setShowChildren] = useState<boolean>(true);
   const [openItem, setOpenItem] = useState<boolean>(false);
+  const [subitemName, setSubitemName] = useState<string>("");
+  const [showSubitemForm, setShowSubitemForm] = useState<boolean>(false);
+
   const [{ isDragging }, drag] = useDrag(() => ({
     type: "item",
     item,
@@ -127,31 +137,7 @@ const DraggableItem: React.FC<DraggableItem> = ({
         moveItem(draggedItem, item);
         setShowChildren(true);
       } else {
-        let offset: number | null = null;
-        setItems((items) => {
-          const draggedItemParent = findParent(draggedItem);
-          const dropItemParent = findParent(item);
-
-          if (draggedItemParent === dropItemParent) {
-            const parent = dropItemParent?.items ?? items;
-            const indexOfDraggedItem = parent.indexOf(draggedItem);
-            const indexOfDropItem = parent.indexOf(item);
-
-            console.log({ indexOfDraggedItem, indexOfDropItem });
-
-            if (movement.y < 0) {
-              offset = indexOfDropItem - indexOfDraggedItem;
-            } else {
-              offset = indexOfDraggedItem + indexOfDropItem;
-            }
-          }
-
-          return items;
-        });
-
-        if (offset !== null) {
-          orderItem(draggedItem, offset);
-        }
+        switchItem(movement, draggedItem, item);
       }
     },
   }));
@@ -220,21 +206,65 @@ const DraggableItem: React.FC<DraggableItem> = ({
                   <FontAwesomeIcon icon={faChevronDown} width={14} />
                 )}
               </button>
-              <button onClick={() => removeItem(item)}>
-                <FontAwesomeIcon icon={faXmark} width={12} />
-              </button>
             </div>
           </div>
           {openItem && (
-            <div className="tree-item-options">
-              <button
-                onClick={() => {
-                  createItem({ id: uuidv4(), name: "", items: [] }, item);
-                  setShowChildren(true);
-                }}
-              >
-                Criar Subitem
-              </button>
+            <div>
+              <section className="tree-item-options">
+                <button
+                  onClick={() => {
+                    setShowSubitemForm(true);
+                  }}
+                >
+                  <FontAwesomeIcon icon={faPlus} width={12} /> Subitem
+                </button>
+                <button>
+                  <FontAwesomeIcon icon={faShare} width={12} /> Mover
+                </button>
+                <button onClick={() => removeItem(item)}>
+                  <FontAwesomeIcon icon={faXmark} width={12} /> Eliminar
+                </button>
+              </section>
+              {showSubitemForm && (
+                <section className="">
+                  <div className="flex items-end">
+                    <div className="w-full text-gray-700">
+                      <label
+                        htmlFor={`${item.id}-subitem-name`}
+                        className="text-sm font-semibold mb-2 block"
+                      >
+                        Nova palavra para:{" "}
+                        <u className="font-normal">{item.name}</u>
+                      </label>
+                      <input
+                        id={`${item.id}-subitem-name`}
+                        value={subitemName}
+                        onChange={(event) => setSubitemName(event.target.value)}
+                        type="text"
+                        placeholder="Palavra"
+                        className="border text-gray-600 outline-gray-700 border-r-0 w-full h-10 p-2 rounded-l border-gray-400 placeholder:text-sm"
+                      ></input>
+                    </div>
+                    <button
+                      className="h-10 rounded-l-none border w-28"
+                      disabled={!subitemName.length}
+                      onClick={() => {
+                        createItem(
+                          { id: uuidv4(), name: subitemName, items: [] },
+                          item
+                        );
+                        setSubitemName("");
+                        setShowChildren(true);
+                      }}
+                    >
+                      Criar
+                    </button>
+                  </div>
+                  <small className="text-xs text-gray-700">
+                    * Precisa ser preenchido para criar sub-item
+                  </small>
+                </section>
+              )}
             </div>
           )}
         </div>
@@ -386,6 +416,38 @@ export default function Home() {
     }
   };
 
+  const switchItem = (
+    movement: XYCoord,
+    draggedItem: Item,
+    item: Item
+  ): void => {
+    let offset: number | null = null;
+    setItems((items) => {
+      const draggedItemParent = findParent(draggedItem);
+      const dropItemParent = findParent(item);
+
+      if (draggedItemParent === dropItemParent) {
+        const parent = dropItemParent?.items ?? items;
+        const indexOfDraggedItem = parent.indexOf(draggedItem);
+        const indexOfDropItem = parent.indexOf(item);
+
+        console.log({ indexOfDraggedItem, indexOfDropItem });
+
+        if (movement.y < 0) {
+          offset = indexOfDropItem - indexOfDraggedItem;
+        } else {
+          offset = indexOfDraggedItem + indexOfDropItem;
+        }
+      }
+
+      return items;
+    });
+
+    if (offset !== null) {
+      orderItem(draggedItem, offset);
+    }
+  };
+
   const orderItem = (item: Item, indexOffset: number): void => {
     setItems((items) => {
       const parent = findParent(item);
@@ -474,21 +536,40 @@ export default function Home() {
         <section className="h-full relative">
           <div className="absolute w-full h-full flex">
             <div
-              className={`flex-col w-80 h-full ${
-                showSavedItems ? "flex" : "hidden"
+              className={`hierarchy-sidebar flex flex-col w-full overflow-hidden sm:w-80 shrink-0 h-full ${
+                showSavedItems ? "hierarchy-sidebar-open" : "!w-px -ml-px"
               }`}
             >
               <header className="header bg-sky-600 text-white space-x-2">
-                <FontAwesomeIcon icon={faSitemap} />
+                <FontAwesomeIcon icon={faSitemap} width={14} />
                 <strong>Minhas Hierarquias</strong>
               </header>
-              <section className="h-full bg-slate-700">...</section>
+              <section className="h-full overflow-auto bg-slate-700 text-white"></section>
+              {items.length === 0 && (
+                <footer className="footer bg-slate-600 sm:hidden">
+                  <button
+                    onClick={() => {
+                      setShowSavedItems(false);
+                    }}
+                    className="primary space-x-2 p-3 px-4 w-full text-base"
+                  >
+                    <FontAwesomeIcon icon={faPlus} width={12} />
+                    <span>Nova Hierarquia</span>
+                  </button>
+                </footer>
+              )}
             </div>
 
             <div className="flex flex-col grow h-full overflow-auto">
-              <header className="p-3">
+              <header className="p-3 bg-gray-300 text-gray-700">
                 <div className="flex items-end">
                   <div className="w-full">
+                    <label
+                      htmlFor="item-name"
+                      className="text-sm font-semibold mb-2 block"
+                    >
+                      Nova palavra
+                    </label>
                     <input
                       id="item-name"
                       value={name}
@@ -507,9 +588,12 @@ export default function Home() {
                     Criar
                   </button>
                 </div>
+                <small className="text-xs text-gray-700">
+                  * Esta palavra sera criada no primeiro nível da lista
+                </small>
               </header>
 
-              <section className="flex h-full m-3 mt-0 p-3 pl-0 overflow-auto">
+              <section className="flex h-full m-3 p-3 pl-0 overflow-auto">
                 <DndProvider backend={HTML5Backend}>
                   <DraggableItems
                     items={items}
@@ -519,6 +603,7 @@ export default function Home() {
                     findParent={findParent}
                     setItems={setItems}
                     createItem={createItem}
+                    switchItem={switchItem}
                   ></DraggableItems>
                 </DndProvider>
               </section>
