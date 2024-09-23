@@ -293,7 +293,8 @@ const DraggableItem: React.FC<DraggableItem> = ({
                     }, 100);
                   }}
                 >
-                  <FontAwesomeIcon icon={faShare} width={12} /> Mover
+                  <FontAwesomeIcon icon={faShare} width={12} />
+                  <span>Mover</span>
                 </button>
 
                 {findParent(item) ? (
@@ -303,14 +304,15 @@ const DraggableItem: React.FC<DraggableItem> = ({
                     }}
                   >
                     <FontAwesomeIcon icon={faArrowDownShortWide} width={12} />{" "}
-                    Desvincular
+                    <span>Desvincular</span>
                   </button>
                 ) : (
                   ""
                 )}
 
                 <button onClick={() => removeItem(item)}>
-                  <FontAwesomeIcon icon={faXmark} width={12} /> Eliminar
+                  <FontAwesomeIcon icon={faXmark} width={12} />
+                  <span>Eliminar</span>
                 </button>
               </section>
               {showSubitemForm && (
@@ -321,7 +323,8 @@ const DraggableItem: React.FC<DraggableItem> = ({
                         htmlFor={`${item.id}-subitem-name`}
                         className="text-sm font-semibold mb-2 block"
                       >
-                        Subitem para: <u className="font-normal">{item.name}</u>
+                        Subitem para:{" "}
+                        <span className="font-normal">{item.name}</span>
                       </label>
                       <input
                         id={`${item.id}-subitem-name`}

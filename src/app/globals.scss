@@ -175,6 +175,12 @@
 
       &-options {
         @apply my-2 text-sm space-x-2 flex w-full;
+        button {
+          @apply text-xs p-1 px-2.5 min-h-0;
+          span {
+            @apply ml-1.5;
+          }
+        }
       }
 
       & ~ .tree {
