@@ -19,23 +19,35 @@ body {
 }
 
 @layer utilities {
-  .text-balance {
-    text-wrap: balance;
+  * {
+    @apply transition-all duration-100;
   }
 }
 
 @layer components {
-  * {
-    @apply transition-all duration-100;
-  }
-
-  button {
-    @apply bg-gray-200 text-gray-900 rounded px-2 min-h-8 duration-0;
+  button,
+  .button {
+    @apply bg-gray-200 border border-gray-400 text-gray-900 rounded px-3 min-h-8 duration-0 text-sm;
 
     &:hover,
-    &:focus {
-      @apply bg-gray-900 text-white;
+    &:focus,
+    &.active {
+      @apply bg-gray-900 text-white border-gray-950;
     }
+
+    &.primary {
+      @apply bg-sky-600 text-white border border-sky-700;
+      &:hover,
+      &:focus,
+      &.active {
+        @apply bg-sky-700;
+      }
+    }
+  }
+
+  .header,
+  .footer {
+    @apply flex p-3 h-16 items-center;
   }
 
   .tree {
@@ -107,7 +119,7 @@ body {
             @apply relative;
 
             &::before {
-              @apply absolute border border-dashed border-gray-500 h-0.5 w-2 sm:w-5 left-0 top-4 ml-1.5 sm:-ml-2 rounded-full;
+              @apply absolute border border-dashed border-gray-500 h-0.5 w-2 sm:w-6 left-0 top-4 ml-1.5 sm:-ml-2 rounded-full;
               content: "";
             }
           }
@@ -134,7 +146,7 @@ body {
       }
     }
     &-childrenButton {
-      @apply bg-transparent h-9 text-inherit min-w-10 p-0 flex items-center justify-center;
+      @apply border-0 bg-transparent h-9 text-inherit min-w-10 p-0 flex items-center justify-center;
 
       > span {
         @apply flex w-3 h-3 text-gray-600 z-10 border-2 border-gray-600 items-center justify-center rounded-full;
@@ -149,8 +161,9 @@ body {
     &-actions {
       @apply flex rounded-r overflow-hidden border border-l-0 border-gray-600;
 
-      button {
-        @apply border-l border-gray-600 flex rounded-none items-center justify-center bg-white p-0 text-inherit min-w-9 min-h-0;
+      button,
+      .button {
+        @apply border-0 border-l border-gray-600 flex rounded-none items-center justify-center bg-white p-0 text-inherit min-w-9 min-h-0;
 
         &:focus,
         &:hover {

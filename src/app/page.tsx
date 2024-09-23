@@ -13,6 +13,7 @@ import {
   faXmark,
   faChevronDown,
   faChevronUp,
+  faSitemap,
 } from "@fortawesome/free-solid-svg-icons";
 import { v4 as uuidv4 } from "uuid";
 import React from "react";
@@ -208,7 +209,7 @@ const DraggableItem: React.FC<DraggableItem> = ({
               <input
                 type="text"
                 value={item.name}
-                placeholder="Nome do item"
+                placeholder="Palavra"
                 onChange={(e) => {
                   item.name = e.target.value;
                   setItems((items) => [...items]);
@@ -266,6 +267,7 @@ export default function Home() {
   const [name, setName] = useState<string>("");
   const [items, setItems] = useState<Item[]>([]);
   const [json, setJson] = useState<Data>({ data: [] });
+  const [showSavedItems, setShowSavedItems] = useState<boolean>(true);
 
   const isDescendant = (parent: Item, child: Item): boolean => {
     if (parent.items.includes(child)) {
@@ -457,57 +459,88 @@ export default function Home() {
   return (
     <div className="absolute w-full h-full overflow-hidden">
       <div className="relative flex flex-col h-full w-full">
-        <header className="p-3">
-          <h2 className="text-lg font-bold">
-            Criador de Hierarquia de Palavras
-          </h2>
-          <p>...</p>
-        </header>
-
-        <section className="h-full overflow-auto p-3 m-2">
-          <div className="flex bg-white mb-4 rounded p-2">
-            <div className="w-full">
-              <label htmlFor="item-name" className="text-sm mb-2">
-                Nome do item
-              </label>
-              <input
-                id="item-name"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                type="text"
-                className="border w-full p-2 border-gray-600 rounded placeholder:text-sm"
-              ></input>
-            </div>
+        <header className="header bg-slate-600 text-white">
+          <div className="flex items-center space-x-3">
             <button
               onClick={() => {
-                createItem({ id: uuidv4(), name, items: [] });
+                setShowSavedItems(!showSavedItems);
               }}
+              className="bg-transparent !text-inherit border hover:bg-slate-500 focus:bg-slate-500 !border-white"
             >
-              Criar
+              <FontAwesomeIcon icon={faBars} />
             </button>
+            <h2 className="text-lg font-bold">
+              Criador de Hierarquia de Palavras
+            </h2>
           </div>
-          <DndProvider backend={backend}>
-            <DraggableItems
-              items={items}
-              removeItem={removeItem}
-              moveItem={moveItem}
-              orderItem={orderItem}
-              findParent={findParent}
-              setItems={setItems}
-              createItem={createItem}
-            ></DraggableItems>
-          </DndProvider>
-        </section>
+        </header>
 
-        <footer className="bg-white p-3 border-t border-gray-300">
-          <div className="space-x-2">
-            <button onClick={saveData}>Salvar</button>
-            <button onClick={download} className="space-x-2">
-              <FontAwesomeIcon icon={faCircleDown} width={14} />
-              <span>Baixar Arquivo JSON</span>
-            </button>
+        <section className="h-full relative">
+          <div className="absolute w-full h-full flex">
+            <div
+              className={`flex-col w-80 h-full ${
+                showSavedItems ? "flex" : "hidden"
+              }`}
+            >
+              <header className="header bg-sky-600 text-white space-x-2">
+                <FontAwesomeIcon icon={faSitemap} />
+                <strong>Minhas Hierarquias</strong>
+              </header>
+              <section className="h-full bg-slate-700">...</section>
+            </div>
+
+            <div className="flex flex-col grow h-full overflow-auto">
+              <header className="p-3">
+                <div className="flex items-end">
+                  <div className="w-full">
+                    <input
+                      id="item-name"
+                      value={name}
+                      onChange={(event) => setName(event.target.value)}
+                      type="text"
+                      placeholder="Palavra"
+                      className="border text-gray-600 outline-gray-700 border-r-0 w-full h-10 p-2 rounded-l border-gray-400 placeholder:text-sm"
+                    ></input>
+                  </div>
+                  <button
+                    className="h-10 rounded-l-none border w-28"
+                    onClick={() => {
+                      createItem({ id: uuidv4(), name, items: [] });
+                    }}
+                  >
+                    Criar
+                  </button>
+                </div>
+              </header>
+
+              <section className="flex h-full m-3 mt-0 p-3 pl-0 overflow-auto">
+                <DndProvider backend={backend}>
+                  <DraggableItems
+                    items={items}
+                    removeItem={removeItem}
+                    moveItem={moveItem}
+                    orderItem={orderItem}
+                    findParent={findParent}
+                    setItems={setItems}
+                    createItem={createItem}
+                  ></DraggableItems>
+                </DndProvider>
+              </section>
+
+              <footer className="items-center bg-white footer border-t border-gray-300">
+                <div className="space-x-2">
+                  <button onClick={saveData} className="primary">
+                    Salvar
+                  </button>
+                  <button onClick={download} className="space-x-2">
+                    <FontAwesomeIcon icon={faCircleDown} width={14} />
+                    <span>Baixar Arquivo JSON</span>
+                  </button>
+                </div>
+              </footer>
+            </div>
           </div>
-        </footer>
+        </section>
       </div>
     </div>
   );
