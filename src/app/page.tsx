@@ -14,6 +14,9 @@ import {
   faSitemap,
   faShare,
   faPlus,
+  faArrowDownShortWide,
+  faCaretDown,
+  faCaretUp,
 } from "@fortawesome/free-solid-svg-icons";
 import { v4 as uuidv4 } from "uuid";
 import React from "react";
@@ -66,8 +69,7 @@ const DraggableItems: React.FC<DraggableItems> = ({
   const [movingItem, setMovingItem] = useState<Item | null>(null);
   const [currentItem, setCurrentItem] = useState<Item | null>(null);
   return (
-    <div className="tree">
-      {movingItem ? "yes" : "no"}
+    <div className={`tree ${movingItem && "tree-item-selection"}`}>
       {items.map((item) => (
         <DraggableItem
           key={item.id}
@@ -106,6 +108,7 @@ const DraggableItem: React.FC<DraggableItem> = ({
   const [subitemName, setSubitemName] = useState<string>("");
   const [showSubitemForm, setShowSubitemForm] = useState<boolean>(false);
   const [clicked, setClicked] = useState<boolean>(false);
+  const [isMovingItem, setIsMovingItem] = useState<boolean>(false);
 
   useEffect(() => {
     if (clicked) {
@@ -168,13 +171,11 @@ const DraggableItem: React.FC<DraggableItem> = ({
         return;
       }
 
-      const movementX = targetPosition.x + 20;
+      const movementX = draggedPosition.x - targetPosition.x;
 
-      console.log("----", draggedPosition.x, ">", movementX);
+      console.log("**", movementX);
 
-      console.log("**", movement);
-
-      if (movement.x >= 20) {
+      if (movementX >= 50) {
         moveItem(draggedItem, item);
         setShowChildren(true);
       } else {
@@ -199,7 +200,8 @@ const DraggableItem: React.FC<DraggableItem> = ({
         className={`tree-item 
           ${isDragging ? "tree-item-dragging" : ""} 
           ${showChildren && item.items.length ? "tree-item-expanded" : ""}
-          ${item.items.length && "tree-item-expandable"}
+          ${item.items.length && "tree-item-expandable"} 
+          ${isMovingItem && "tree-item-moving"}
         `}
       >
         <button
@@ -256,24 +258,57 @@ const DraggableItem: React.FC<DraggableItem> = ({
             <div>
               <section className="tree-item-options">
                 <button
+                  className="mr-3"
                   onClick={() => {
                     setShowSubitemForm(!showSubitemForm);
                   }}
                 >
-                  <FontAwesomeIcon icon={faPlus} width={12} /> Subitem
+                  <FontAwesomeIcon icon={faPlus} width={12} />
+                </button>
+
+                <button
+                  onClick={() => {
+                    orderItem(item, -1);
+                  }}
+                >
+                  <FontAwesomeIcon icon={faCaretUp} width={12} />
                 </button>
                 <button
                   onClick={() => {
+                    orderItem(item, 1);
+                  }}
+                >
+                  <FontAwesomeIcon icon={faCaretDown} width={12} />
+                </button>
+
+                <button
+                  onClick={() => {
                     setMovingItem(item);
+                    setIsMovingItem(true);
                   }}
                   onBlur={() => {
                     setTimeout(() => {
                       setMovingItem(null);
+                      setIsMovingItem(false);
                     }, 100);
                   }}
                 >
                   <FontAwesomeIcon icon={faShare} width={12} /> Mover
                 </button>
+
+                {findParent(item) ? (
+                  <button
+                    onClick={() => {
+                      moveItem(item);
+                    }}
+                  >
+                    <FontAwesomeIcon icon={faArrowDownShortWide} width={12} />{" "}
+                    Desvincular
+                  </button>
+                ) : (
+                  ""
+                )}
+
                 <button onClick={() => removeItem(item)}>
                   <FontAwesomeIcon icon={faXmark} width={12} /> Eliminar
                 </button>
@@ -286,8 +321,7 @@ const DraggableItem: React.FC<DraggableItem> = ({
                         htmlFor={`${item.id}-subitem-name`}
                         className="text-sm font-semibold mb-2 block"
                       >
-                        Nova palavra para:{" "}
-                        <u className="font-normal">{item.name}</u>
+                        Subitem para: <u className="font-normal">{item.name}</u>
                       </label>
                       <input
                         id={`${item.id}-subitem-name`}

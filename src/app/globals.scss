@@ -59,6 +59,64 @@
   .tree {
     @apply flex-1;
 
+    &.tree-item-selection {
+      .tree-item-moving {
+        .tree-wrapper,
+        .tree-wrapper:hover {
+          @apply opacity-10;
+
+          .tree-item-name,
+          .tree-actions,
+          .tree-actions button {
+            @apply border-solid;
+          }
+
+          .tree-item-name,
+          .tree-actions {
+            @apply border;
+          }
+
+          .tree-actions {
+            @apply border-l-0;
+          }
+
+          .tree-actions button {
+            @apply border-0;
+          }
+        }
+      }
+      .tree-wrapper {
+        @apply opacity-80;
+
+        .tree-item-name,
+        .tree-actions,
+        .tree-actions button {
+          @apply duration-75 border-dashed;
+        }
+
+        &:hover {
+          @apply opacity-100;
+
+          .tree-item-name,
+          .tree-actions {
+            @apply border-solid border-2 shadow-xl;
+          }
+
+          .tree-actions {
+            @apply border-l-0;
+          }
+
+          .tree-actions button {
+            @apply border-0;
+          }
+
+          * {
+            @apply cursor-pointer;
+          }
+        }
+      }
+    }
+
     &-item {
       @apply flex w-full mb-2;
 
@@ -116,9 +174,7 @@
       }
 
       &-options {
-        @apply my-2 text-sm space-x-1.5;
-        button {
-        }
+        @apply my-2 text-sm space-x-2 flex w-full;
       }
 
       & ~ .tree {
@@ -146,6 +202,7 @@
         }
       }
     }
+
     &-wrapper {
       @apply flex w-full bg-white;
 
@@ -153,6 +210,7 @@
         @apply flex-col w-full;
       }
     }
+
     &-childrenButton {
       @apply border-0 bg-transparent h-9 text-inherit min-w-10 p-0 flex items-center justify-center;
 
