@@ -91,16 +91,18 @@ const DraggableItems: React.FC<DraggableItems> = ({
     <div className="w-full">
       <div className="mb-6 px-4">
         <div>
-          <select
-            value={currentView}
-            onChange={(e) => {
-              setCurrentView(e.target.value as treeView);
-            }}
-          >
-            <option value="expanded">Aberto</option>
-            <option value="root">Primeiro nível</option>
-            <option value="custom">Personalizado</option>
-          </select>
+          {items.length > 0 && (
+            <select
+              value={currentView}
+              onChange={(e) => {
+                setCurrentView(e.target.value as treeView);
+              }}
+            >
+              <option value="expanded">Aberto</option>
+              <option value="root">Primeiro nível</option>
+              <option value="custom">Personalizado</option>
+            </select>
+          )}
         </div>
       </div>
       <div className={`tree ${movingItem && "tree-item-selection"}`}>
