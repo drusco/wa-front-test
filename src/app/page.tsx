@@ -42,6 +42,8 @@ interface DraggableItems {
   switchItem: (movement: XYCoord, draggedItem: Item, item: Item) => void;
 }
 
+type treeView = "custom" | "expanded" | "root";
+
 interface DraggableItem {
   item: Item;
   moveItem: (draggedItem: Item, targetItem?: Item) => void;
@@ -54,6 +56,11 @@ interface DraggableItem {
   setMovingItem: Dispatch<SetStateAction<Item | null>>;
   setCurrentItem: Dispatch<SetStateAction<Item | null>>;
   currentItem: Item | null;
+  setCurrentView: Dispatch<SetStateAction<treeView>>;
+  currentView: treeView;
+  getTargetClientPosition: <T extends HTMLElement>(
+    ref: React.MutableRefObject<T | null>
+  ) => XYCoord | null;
 }
 
 const DraggableItems: React.FC<DraggableItems> = ({
@@ -68,24 +75,55 @@ const DraggableItems: React.FC<DraggableItems> = ({
 }) => {
   const [movingItem, setMovingItem] = useState<Item | null>(null);
   const [currentItem, setCurrentItem] = useState<Item | null>(null);
+  const [currentView, setCurrentView] = useState<treeView>("expanded");
+
+  const getTargetClientPosition = <T extends HTMLElement>(
+    ref: React.MutableRefObject<T | null>
+  ): XYCoord | null => {
+    if (ref.current) {
+      const rect = ref.current.getBoundingClientRect();
+      return { x: rect.left, y: rect.top };
+    }
+    return null;
+  };
+
   return (
-    <div className={`tree ${movingItem && "tree-item-selection"}`}>
-      {items.map((item) => (
-        <DraggableItem
-          key={item.id}
-          item={item}
-          moveItem={moveItem}
-          removeItem={removeItem}
-          orderItem={orderItem}
-          findParent={findParent}
-          setItems={setItems}
-          createItem={createItem}
-          switchItem={switchItem}
-          setMovingItem={setMovingItem}
-          setCurrentItem={setCurrentItem}
-          currentItem={currentItem}
-        />
-      ))}
+    <div className="w-full">
+      <div className="mb-6 px-4">
+        <div>
+          <select
+            value={currentView}
+            onChange={(e) => {
+              setCurrentView(e.target.value as treeView);
+            }}
+          >
+            <option value="expanded">Aberto</option>
+            <option value="root">Primeiro nível</option>
+            <option value="custom">Personalizado</option>
+          </select>
+        </div>
+      </div>
+      <div className={`tree ${movingItem && "tree-item-selection"}`}>
+        {items.map((item) => (
+          <DraggableItem
+            key={item.id}
+            item={item}
+            moveItem={moveItem}
+            removeItem={removeItem}
+            orderItem={orderItem}
+            findParent={findParent}
+            setItems={setItems}
+            createItem={createItem}
+            switchItem={switchItem}
+            setMovingItem={setMovingItem}
+            setCurrentItem={setCurrentItem}
+            currentItem={currentItem}
+            setCurrentView={setCurrentView}
+            currentView={currentView}
+            getTargetClientPosition={getTargetClientPosition}
+          />
+        ))}
+      </div>
     </div>
   );
 };
@@ -102,6 +140,9 @@ const DraggableItem: React.FC<DraggableItem> = ({
   setMovingItem,
   setCurrentItem,
   currentItem,
+  setCurrentView,
+  currentView,
+  getTargetClientPosition,
 }) => {
   const [showChildren, setShowChildren] = useState<boolean>(true);
   const [openItem, setOpenItem] = useState<boolean>(false);
@@ -109,6 +150,7 @@ const DraggableItem: React.FC<DraggableItem> = ({
   const [showSubitemForm, setShowSubitemForm] = useState<boolean>(false);
   const [clicked, setClicked] = useState<boolean>(false);
   const [isMovingItem, setIsMovingItem] = useState<boolean>(false);
+  const dropTargetRef = React.useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (clicked) {
@@ -125,6 +167,24 @@ const DraggableItem: React.FC<DraggableItem> = ({
       setClicked(false);
     }
   }, [clicked, item, moveItem, setMovingItem]);
+
+  useEffect(() => {
+    switch (currentView) {
+      case "root":
+        if (!findParent(item)) {
+          setShowChildren(false);
+        }
+        break;
+      case "expanded":
+        setShowChildren(true);
+        break;
+      default:
+        if (!findParent(item)) {
+          setShowChildren(true);
+        }
+        break;
+    }
+  }, [currentView, item, findParent]);
 
   useEffect(() => {
     if (openItem) {
@@ -165,7 +225,7 @@ const DraggableItem: React.FC<DraggableItem> = ({
 
       const movement = monitor.getDifferenceFromInitialOffset();
       const draggedPosition = monitor.getClientOffset();
-      const targetPosition = getTargetClientPosition();
+      const targetPosition = getTargetClientPosition(dropTargetRef);
 
       if (!movement || !draggedPosition || !targetPosition) {
         return;
@@ -184,16 +244,6 @@ const DraggableItem: React.FC<DraggableItem> = ({
     },
   }));
 
-  const getTargetClientPosition = () => {
-    if (dropTargetRef.current) {
-      const rect = dropTargetRef.current.getBoundingClientRect();
-      return { x: rect.left, y: rect.top };
-    }
-    return null;
-  };
-
-  const dropTargetRef = React.useRef<HTMLDivElement | null>(null);
-
   return (
     <Fragment>
       <div
@@ -208,6 +258,7 @@ const DraggableItem: React.FC<DraggableItem> = ({
           className="tree-childrenButton"
           onClick={() => {
             setShowChildren(!showChildren);
+            setCurrentView("custom");
           }}
         >
           <span>
@@ -246,7 +297,12 @@ const DraggableItem: React.FC<DraggableItem> = ({
               <span className="tree-item-draggable"></span>
             </div>
             <div className="tree-actions">
-              <button onClick={() => setOpenItem(!openItem)}>
+              <button
+                onClick={() => {
+                  setOpenItem(!openItem);
+                  setShowSubitemForm(false);
+                }}
+              >
                 {openItem && <FontAwesomeIcon icon={faChevronUp} width={14} />}
                 {!openItem && (
                   <FontAwesomeIcon icon={faChevronDown} width={14} />
@@ -373,6 +429,9 @@ const DraggableItem: React.FC<DraggableItem> = ({
               setMovingItem={setMovingItem}
               setCurrentItem={setCurrentItem}
               currentItem={currentItem}
+              currentView={currentView}
+              setCurrentView={setCurrentView}
+              getTargetClientPosition={getTargetClientPosition}
             />
           ))}
         </div>

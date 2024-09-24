@@ -32,7 +32,9 @@
 
 @layer components {
   button,
-  .button {
+  .button,
+  select,
+  .select {
     @apply bg-gray-200 border border-gray-400 rounded px-3 min-h-8 duration-0 text-sm;
 
     &:hover,
@@ -48,6 +50,15 @@
       &.active {
         @apply bg-sky-700;
       }
+    }
+  }
+
+  select,
+  .select {
+    @apply bg-transparent border-0 border-b-2 rounded-none px-2;
+    &:hover,
+    &:focus {
+      @apply bg-transparent text-inherit outline-none;
     }
   }
 
@@ -174,7 +185,7 @@
       }
 
       &-options {
-        @apply my-2 text-sm w-full items-start flex gap-2;
+        @apply mt-2 text-sm w-full items-start flex gap-2;
 
         button {
           @apply text-xs p-1 px-2.5 min-h-6 h-full flex items-center justify-center flex-row;
