@@ -22,6 +22,26 @@
   [disabled] {
     @apply cursor-not-allowed opacity-80;
   }
+
+  ::-webkit-scrollbar {
+    @apply bg-transparent w-1.5 h-1.5;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-500 rounded-2xl bg-opacity-40;
+  }
+
+  ::-webkit-scrollbar-button {
+    @apply hidden;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-opacity-50;
+  }
 }
 
 @layer utilities {

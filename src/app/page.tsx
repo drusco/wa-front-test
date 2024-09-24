@@ -17,21 +17,32 @@ import {
   faLinkSlash,
   faCaretDown,
   faCaretUp,
+  faTrash,
 } from "@fortawesome/free-solid-svg-icons";
 import { v4 as uuidv4 } from "uuid";
+import moment from "moment";
 import React from "react";
 
-interface Item {
+import { useDispatch, useSelector } from "react-redux";
+import type { rootState } from "./redux/store";
+import {
+  saveHierarchy,
+  removeHierarchy,
+  hierarchy,
+  hierarchySlice,
+} from "./redux/features/hierarchySlice";
+
+export interface Item {
   id?: string;
   name: string;
   items: Item[];
 }
 
-interface Data {
+export interface Data {
   data: Item[];
 }
 
-interface DraggableItems {
+export interface DraggableItems {
   items: Item[];
   moveItem: (draggedItem: Item, targetItem?: Item) => void;
   removeItem: (item: Item) => boolean;
@@ -42,9 +53,9 @@ interface DraggableItems {
   switchItem: (movement: XYCoord, draggedItem: Item, item: Item) => void;
 }
 
-type treeView = "custom" | "expanded" | "root";
+export type treeView = "custom" | "expanded" | "root";
 
-interface DraggableItem {
+export interface DraggableItem {
   item: Item;
   moveItem: (draggedItem: Item, targetItem?: Item) => void;
   removeItem: (item: Item) => boolean;
@@ -171,6 +182,7 @@ const DraggableItem: React.FC<DraggableItem> = ({
   }, [clicked, item, moveItem, setMovingItem]);
 
   useEffect(() => {
+    setOpenItem(false);
     switch (currentView) {
       case "root":
         if (!findParent(item)) {
@@ -395,6 +407,7 @@ const DraggableItem: React.FC<DraggableItem> = ({
                       className="h-10 rounded-l-none border w-28"
                       disabled={!subitemName.length}
                       onClick={() => {
+                        setCurrentView("expanded");
                         createItem(
                           { id: uuidv4(), name: subitemName, items: [] },
                           item
@@ -447,6 +460,14 @@ export default function Home() {
   const [items, setItems] = useState<Item[]>([]);
   const [json, setJson] = useState<Data>({ data: [] });
   const [showSavedItems, setShowSavedItems] = useState<boolean>(true);
+
+  const [currentHierarchy, setCurrentHierarchy] = useState<hierarchy>();
+
+  const hierarchyState: hierarchySlice = useSelector(
+    (state: rootState) => state.hierarchies
+  );
+
+  const dispatch = useDispatch();
 
   const isDescendant = (parent: Item, child: Item): boolean => {
     if (parent.items.includes(child)) {
@@ -522,7 +543,14 @@ export default function Home() {
   };
 
   const saveData = (): void => {
-    console.log("save to store");
+    console.log("save to store", items);
+
+    dispatch(
+      saveHierarchy({
+        id: currentHierarchy?.id || uuidv4(),
+        items,
+      })
+    );
   };
 
   const updateData = (): void => {
@@ -669,6 +697,14 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items]);
 
+  useEffect(() => {
+    if (!currentHierarchy) {
+      return;
+    }
+    console.log(555, "items updated from hierarchy");
+    setItems(JSON.parse(JSON.stringify(currentHierarchy.items)));
+  }, [currentHierarchy]);
+
   return (
     <div className="absolute w-full h-full overflow-hidden">
       <div className="relative flex flex-col h-full w-full">
@@ -691,32 +727,114 @@ export default function Home() {
         <section className="h-full relative">
           <div className="absolute w-full h-full flex">
             <div
-              className={`hierarchy-sidebar flex flex-col w-full overflow-hidden sm:w-80 shrink-0 h-full ${
+              className={`hierarchy-sidebar bg-slate-700 flex flex-col w-full overflow-hidden sm:w-80 shrink-0 h-full ${
                 showSavedItems ? "hierarchy-sidebar-open" : "!w-px -ml-px"
               }`}
             >
-              <header className="header bg-sky-600 text-white space-x-2">
+              <header className="header bg-slate-700 text-white space-x-2">
                 <FontAwesomeIcon icon={faSitemap} width={14} />
                 <strong>Minhas Hierarquias</strong>
               </header>
-              <section className="h-full overflow-auto bg-slate-700 text-white"></section>
-              {items.length === 0 && (
-                <footer className="footer bg-slate-600 sm:hidden">
-                  <button
-                    onClick={() => {
-                      setShowSavedItems(false);
-                    }}
-                    className="primary space-x-2 p-3 px-4 w-full text-base"
+              <section className="h-full m-1.5 p-1.5 overflow-auto text-white">
+                {hierarchyState.hierarchies.map((hierarchy, index) => (
+                  <div
+                    key={hierarchy.id}
+                    className={`bg-slate-600 border border-slate-500 rounded mb-3 
+                      ${
+                        hierarchy.id === currentHierarchy?.id
+                          ? "bg-slate-800"
+                          : ""
+                      }`}
                   >
-                    <FontAwesomeIcon icon={faPlus} width={12} />
-                    <span>Nova Hierarquia</span>
-                  </button>
-                </footer>
-              )}
+                    <div className="p-3 text-sm">
+                      <div className="mb-2">
+                        <span className="font-bold">
+                          Hierarquia {index + 1}
+                        </span>
+                      </div>
+                      <div>
+                        Criado:{" "}
+                        {moment(hierarchy?.createDate).format(
+                          "DD/MM/YYYY HH:mm"
+                        )}
+                      </div>
+                      <div>
+                        Atualizado:{" "}
+                        {moment(hierarchy?.updateDate).format(
+                          "DD/MM/YYYY HH:mm"
+                        )}
+                      </div>
+                    </div>
+                    <div
+                      className={`bg-slate-600 p-2 space-x-2 
+                      ${
+                        hierarchy.id === currentHierarchy?.id
+                          ? "bg-slate-700"
+                          : ""
+                      }`}
+                    >
+                      {hierarchy.id !== currentHierarchy?.id ? (
+                        <Fragment>
+                          <button
+                            className="bg-slate-700 hover:bg-slate-800 !border-slate-500 hidden sm:inline"
+                            onClick={() => {
+                              setCurrentHierarchy(hierarchy);
+                            }}
+                          >
+                            Abrir
+                          </button>
+                          <button
+                            className="bg-slate-700 hover:bg-slate-800 !border-slate-500 sm:hidden"
+                            onClick={() => {
+                              setShowSavedItems(false);
+                              setCurrentHierarchy(hierarchy);
+                            }}
+                          >
+                            Abrir
+                          </button>
+                        </Fragment>
+                      ) : (
+                        ""
+                      )}
+                      <button
+                        className="bg-slate-700 hover:bg-slate-800 space-x-2  !border-slate-500"
+                        onClick={() => {
+                          dispatch(removeHierarchy({ id: hierarchy.id }));
+                        }}
+                      >
+                        <FontAwesomeIcon width={9} icon={faTrash} />
+                        <span>Eliminar</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </section>
+
+              <footer className="footer">
+                <button
+                  onClick={() => {
+                    setShowSavedItems(false);
+                    dispatch(saveHierarchy({ id: uuidv4(), items: [] }));
+                  }}
+                  className="bg-slate-500 hover:border-slate-400 focus:border-slate-400 text-white space-x-2 px-4 p-2 w-full text-base sm:hidden"
+                >
+                  <FontAwesomeIcon icon={faPlus} width={12} />
+                  <span>Nova Hierarquia</span>
+                </button>
+                <button
+                  onClick={() => {
+                    dispatch(saveHierarchy({ id: uuidv4(), items: [] }));
+                  }}
+                  className="bg-slate-500 hover:border-slate-400 focus:border-slate-400 text-white space-x-2 px-4 p-2 w-full text-base hidden sm:inline"
+                >
+                  <FontAwesomeIcon icon={faPlus} width={12} />
+                  <span>Nova Hierarquia</span>
+                </button>
+              </footer>
             </div>
 
             <div className="flex flex-col grow h-full overflow-auto">
-              <header className="p-3 bg-gray-300 text-gray-700">
+              <div className="p-3 bg-gray-300 text-gray-700">
                 <div className="flex items-end">
                   <div className="w-full">
                     <label
@@ -746,9 +864,9 @@ export default function Home() {
                 <small className="text-xs text-gray-700">
                   * Esta palavra sera criada no primeiro nível da lista
                 </small>
-              </header>
+              </div>
 
-              <section className="flex h-full m-3 p-3 pl-0 overflow-auto">
+              <section className="flex h-full m-3 p-3 pt-0 pl-0 overflow-auto">
                 <DndProvider backend={HTML5Backend}>
                   <DraggableItems
                     items={items}
