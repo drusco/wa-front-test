@@ -14,7 +14,7 @@ import {
   faSitemap,
   faShare,
   faPlus,
-  faArrowDownShortWide,
+  faLinkSlash,
   faCaretDown,
   faCaretUp,
 } from "@fortawesome/free-solid-svg-icons";
@@ -258,7 +258,6 @@ const DraggableItem: React.FC<DraggableItem> = ({
             <div>
               <section className="tree-item-options">
                 <button
-                  className="mr-3"
                   onClick={() => {
                     setShowSubitemForm(!showSubitemForm);
                   }}
@@ -294,7 +293,6 @@ const DraggableItem: React.FC<DraggableItem> = ({
                   }}
                 >
                   <FontAwesomeIcon icon={faShare} width={12} />
-                  <span>Mover</span>
                 </button>
 
                 {findParent(item) ? (
@@ -303,8 +301,8 @@ const DraggableItem: React.FC<DraggableItem> = ({
                       moveItem(item);
                     }}
                   >
-                    <FontAwesomeIcon icon={faArrowDownShortWide} width={12} />{" "}
-                    <span>Desvincular</span>
+                    <FontAwesomeIcon icon={faLinkSlash} width={12} />{" "}
+                    <span>Soltar</span>
                   </button>
                 ) : (
                   ""
@@ -312,7 +310,7 @@ const DraggableItem: React.FC<DraggableItem> = ({
 
                 <button onClick={() => removeItem(item)}>
                   <FontAwesomeIcon icon={faXmark} width={12} />
-                  <span>Eliminar</span>
+                  <span>Tirar</span>
                 </button>
               </section>
               {showSubitemForm && (
@@ -562,10 +560,12 @@ export default function Home() {
         newIndex = fromArray.length - 1;
       }
 
-      console.log("new index", index, "=>", newIndex);
+      if (newIndex !== index) {
+        console.log("new index", index, "=>", newIndex);
 
-      fromArray.splice(index, 1);
-      fromArray.splice(newIndex, 0, item);
+        fromArray.splice(index, 1);
+        fromArray.splice(newIndex, 0, item);
+      }
 
       if (parent) {
         return [...items];

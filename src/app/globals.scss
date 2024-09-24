@@ -33,12 +33,12 @@
 @layer components {
   button,
   .button {
-    @apply bg-gray-200 border border-gray-400 text-gray-900 rounded px-3 min-h-8 duration-0 text-sm;
+    @apply bg-gray-200 border border-gray-400 rounded px-3 min-h-8 duration-0 text-sm;
 
     &:hover,
     &:focus,
     &.active {
-      @apply bg-gray-900 text-white border-gray-950;
+      @apply bg-slate-700 text-white border-slate-800;
     }
 
     &.primary {
@@ -174,9 +174,10 @@
       }
 
       &-options {
-        @apply my-2 text-sm space-x-2 flex w-full;
+        @apply my-2 text-sm w-full items-start flex gap-2;
+
         button {
-          @apply text-xs p-1 px-2.5 min-h-0;
+          @apply text-xs p-1 px-2.5 min-h-6 h-full flex items-center justify-center flex-row;
           span {
             @apply ml-1.5;
           }
