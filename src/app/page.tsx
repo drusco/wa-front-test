@@ -3,17 +3,17 @@
 import React from "react";
 
 import type { Item } from "./components/DraggableItem";
-import type { hierarchy } from "./redux/features/hierarchySlice";
 import { useEffect, useState } from "react";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { v4 as uuidv4 } from "uuid";
-import { useDispatch } from "react-redux";
-import { saveHierarchy } from "./redux/features/hierarchySlice";
+import { useDispatch, useSelector } from "react-redux";
+import { hierarchySlice, saveHierarchy } from "./redux/features/hierarchySlice";
 import { faCircleDown } from "@fortawesome/free-solid-svg-icons";
 import Header from "./components/Header";
 import ItemsSidebar from "./components/ItemsSidebar";
 import Hierarchies from "./components/Hierarchies";
+import { rootState } from "./redux/store";
 
 export interface Data {
   data: Item[];
@@ -24,17 +24,21 @@ export default function Home() {
   const [items, setItems] = useState<Item[]>([]);
   const [json, setJson] = useState<Data>({ data: [] });
   const [showSavedItems, setShowSavedItems] = useState<boolean>(true);
-
-  const [currentHierarchy, setCurrentHierarchy] = useState<hierarchy>();
+  const [currentHierarchyId, setCurrentHierarchyId] = useState<string>(
+    uuidv4()
+  );
 
   const dispatch = useDispatch();
+  const hierarchyState: hierarchySlice = useSelector(
+    (state: rootState) => state.hierarchies
+  );
 
   const saveData = (): void => {
     console.log("save to store", items);
 
     dispatch(
       saveHierarchy({
-        id: currentHierarchy?.id || uuidv4(),
+        id: currentHierarchyId,
         items,
       })
     );
@@ -79,12 +83,13 @@ export default function Home() {
   }, [items]);
 
   useEffect(() => {
-    if (!currentHierarchy) {
-      return;
-    }
-    console.log(555, "items updated from hierarchy");
-    setItems(JSON.parse(JSON.stringify(currentHierarchy.items)));
-  }, [currentHierarchy]);
+    console.log(555, "current hierarchy id changed");
+    const hierarchy = hierarchyState.hierarchies.find(
+      (hierarchy) => hierarchy?.id === currentHierarchyId
+    );
+
+    setItems(hierarchy ? JSON.parse(JSON.stringify(hierarchy.items)) : []);
+  }, [currentHierarchyId]);
 
   return (
     <div className="absolute w-full h-full overflow-hidden">
@@ -97,9 +102,9 @@ export default function Home() {
         <section className="h-full relative">
           <div className="absolute w-full h-full flex">
             <ItemsSidebar
-              currentHierarchy={currentHierarchy}
-              setCurrentHierarchy={setCurrentHierarchy}
+              currentHierarchyId={currentHierarchyId}
               setShowSavedItems={setShowSavedItems}
+              setCurrentHierarchyId={setCurrentHierarchyId}
               showSavedItems={showSavedItems}
             />
 
