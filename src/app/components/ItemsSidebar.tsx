@@ -6,7 +6,6 @@ import { v4 as uuidv4 } from "uuid";
 import moment from "moment";
 
 import {
-  hierarchy,
   hierarchySlice,
   removeHierarchy,
   saveHierarchy,
@@ -104,6 +103,18 @@ export default function ItemsSidebar({
             dispatch(saveHierarchy({ id: newId, items: [] }));
           }}
           className="bg-slate-500 hover:border-slate-400 focus:border-slate-400 text-white space-x-2 px-4 p-2 w-full text-base hidden sm:inline"
+        >
+          <FontAwesomeIcon icon={faPlus} width={12} />
+          <span>Nova Hierarquia</span>
+        </button>
+        <button
+          onClick={() => {
+            const newId = uuidv4();
+            setCurrentHierarchyId(newId);
+            dispatch(saveHierarchy({ id: newId, items: [] }));
+            setShowSavedItems(false);
+          }}
+          className="bg-slate-500 hover:border-slate-400 focus:border-slate-400 text-white space-x-2 px-4 p-2 w-full text-base sm:hidden"
         >
           <FontAwesomeIcon icon={faPlus} width={12} />
           <span>Nova Hierarquia</span>
