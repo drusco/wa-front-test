@@ -1,7 +1,7 @@
 "use client";
 
 import { createSlice } from "@reduxjs/toolkit";
-import type { Item } from "@/app/page";
+import type { Item } from "@/app/components/DraggableItem";
 
 export interface hierarchy {
   id: string;
@@ -39,7 +39,7 @@ export const hierachySlice = createSlice({
           items: JSON.parse(JSON.stringify(payload.items)),
         };
 
-        state.hierarchies = [...state.hierarchies, newHierarchy];
+        state.hierarchies = [newHierarchy,...state.hierarchies];
 
         return;
       }
