@@ -1,6 +1,6 @@
 # Criador de Hierarquia de Palavras
 
-O **Criador de Hierarquia de Palavras** é uma aplicação que permite criar listas de palavras de forma hierárquica, onde cada palavra pode ter sub-palavras, e assim sucessivamente. Esta aplicação tem como objetivo mostrar minhas habilidades em **Next.js** e **React** para a empresa **WA Project**.
+O **Criador de Hierarquia de Palavras** é uma aplicação que permite criar listas de palavras de forma hierárquica, onde cada palavra pode ter sub-palavras, e assim sucessivamente. Esta aplicação tem como objetivo mostrar minhas habilidades em **Next.js**, **React** e **Typescript** para a empresa **WA Project**.
 
 ## Funcionalidades
 
