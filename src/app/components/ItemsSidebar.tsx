@@ -65,7 +65,11 @@ export default function ItemsSidebar({
               </div>
               <div className="min-h-10">
                 Última atualização:{" "}
-                {moment(hierarchy?.updateDate).format("DD/MM/YYYY HH:mm")}
+                {moment(
+                  hierarchy.updateDate
+                    ? hierarchy.updateDate
+                    : hierarchy.createDate
+                ).format("DD/MM/YYYY HH:mm")}
               </div>
             </div>
             <div

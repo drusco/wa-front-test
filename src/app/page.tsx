@@ -27,6 +27,7 @@ export default function Home() {
   const [currentHierarchyId, setCurrentHierarchyId] = useState<string>(
     uuidv4()
   );
+  const [hasNameError, setHasNameError] = useState<boolean>(false);
 
   const dispatch = useDispatch();
   const hierarchyState: hierarchySlice = useSelector(
@@ -77,6 +78,17 @@ export default function Home() {
     URL.revokeObjectURL(url);
   };
 
+  const createFirstLevelItem = (): void => {
+    if (!name?.length) {
+      setHasNameError(true);
+      return;
+    }
+
+    setName("");
+    setHasNameError(false);
+    setItems((items) => [...items, { id: uuidv4(), name, items: [] }]);
+  };
+
   useEffect(() => {
     updateData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -116,33 +128,36 @@ export default function Home() {
                       htmlFor="item-name"
                       className="text-sm font-semibold mb-2 block"
                     >
-                      Nova palavra
+                      Criar nova palavra
                     </label>
                     <input
                       id="item-name"
                       value={name}
                       onChange={(event) => setName(event.target.value)}
                       type="text"
-                      placeholder="Palavra"
-                      className="border text-gray-600 outline-gray-700 border-r-0 w-full h-10 p-2 rounded-l border-gray-400 placeholder:text-sm"
+                      placeholder="Inserir nova palavra..."
+                      className={`border text-gray-600 outline-gray-700 border-r-0 w-full h-10 p-2 rounded-l border-gray-400 placeholder:text-sm ${
+                        hasNameError
+                          ? "border-red-600 border-2 placeholder:text-red-500"
+                          : ""
+                      }`}
                     ></input>
                   </div>
                   <button
-                    className="h-10 rounded-l-none border w-28"
-                    onClick={() => {
-                      setName("");
-                      setItems((items) => [
-                        ...items,
-                        { id: uuidv4(), name, items: [] },
-                      ]);
-                    }}
+                    className="h-10 rounded-l-none border w-32"
+                    onClick={createFirstLevelItem}
                   >
                     Criar
                   </button>
                 </div>
-                <small className="text-xs text-gray-700">
-                  * Esta palavra sera criada no primeiro nível da lista
-                </small>
+                <div className="text-xs text-gray-700 mt-2">
+                  {hasNameError && (
+                    <div className="font-bold text-red-500">* Obrigatorio</div>
+                  )}
+                  <div>
+                    * Esta palavra sera criada no primeiro nível da lista
+                  </div>
+                </div>
               </div>
 
               <section className="flex h-full m-3 p-3 pt-0 pl-0 overflow-auto">

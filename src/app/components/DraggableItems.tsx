@@ -49,8 +49,8 @@ const DraggableItems: React.FC<DraggableItems> = ({
                 setCurrentView(e.target.value as treeView);
               }}
             >
-              <option value="expanded">Aberto</option>
-              <option value="root">Primeiro nível</option>
+              <option value="expanded">Mostrar tudo</option>
+              <option value="root">Mostrar primeiro nível</option>
               <option value="custom">Personalizado</option>
             </select>
           )}

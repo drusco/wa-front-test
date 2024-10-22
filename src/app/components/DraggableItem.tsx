@@ -69,6 +69,8 @@ const DraggableItem: React.FC<DraggableItem> = ({
   const [isMovingItem, setIsMovingItem] = useState<boolean>(false);
   const dropTargetRef = React.useRef<HTMLDivElement | null>(null);
 
+  const itemParent = findParent(item);
+
   useEffect(() => {
     if (clicked) {
       setMovingItem((movingItem) => {
@@ -231,27 +233,41 @@ const DraggableItem: React.FC<DraggableItem> = ({
           {openItem && (
             <div>
               <section className="tree-item-options">
+                {itemParent && itemParent.items.length > 1 ? (
+                  <Fragment>
+                    <button
+                      className="disabled:opacity-30"
+                      disabled={itemParent.items[0].id === item.id}
+                      onClick={() => {
+                        orderItem(item, -1);
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faCaretUp} width={12} />
+                    </button>
+                    <button
+                      className="disabled:opacity-30"
+                      disabled={
+                        itemParent.items[itemParent.items.length - 1].id ===
+                        item.id
+                      }
+                      onClick={() => {
+                        orderItem(item, 1);
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faCaretDown} width={12} />
+                    </button>
+                  </Fragment>
+                ) : (
+                  ""
+                )}
+
                 <button
                   onClick={() => {
                     setShowSubitemForm(!showSubitemForm);
                   }}
                 >
                   <FontAwesomeIcon icon={faPlus} width={12} />
-                </button>
-
-                <button
-                  onClick={() => {
-                    orderItem(item, -1);
-                  }}
-                >
-                  <FontAwesomeIcon icon={faCaretUp} width={12} />
-                </button>
-                <button
-                  onClick={() => {
-                    orderItem(item, 1);
-                  }}
-                >
-                  <FontAwesomeIcon icon={faCaretDown} width={12} />
+                  <span>Subitem</span>
                 </button>
 
                 <button
@@ -270,7 +286,7 @@ const DraggableItem: React.FC<DraggableItem> = ({
                   <span>Mover</span>
                 </button>
 
-                {findParent(item) ? (
+                {itemParent ? (
                   <button
                     onClick={() => {
                       moveItem(item);
