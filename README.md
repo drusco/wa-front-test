@@ -39,4 +39,4 @@ http://localhost:3000
 
 ## Sobre o Projeto
 
-Este projeto foi desenvolvido com o intuito de demonstrar um conjunto específico de habilidades em **React** e **Next.js**, focando em manipulação de dados, estados locais com **Redux**, e funcionalidades avançadas de interface, como o **drag and drop**.
+Este projeto foi desenvolvido com o intuito de demonstrar um conjunto específico de habilidades em **React**, **Next.js** e **Typescript**, focando em manipulação de dados, estados locais com **Redux**, e funcionalidades avançadas de interface, como o **drag and drop**.
