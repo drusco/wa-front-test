@@ -5,6 +5,7 @@ import type { Item } from "@/app/components/DraggableItem";
 
 export interface hierarchy {
   id: string;
+  name: string;
   updateDate: null | number;
   createDate: null | number;
   items: Item[];
@@ -34,12 +35,13 @@ export const hierachySlice = createSlice({
       if (!hierarchy) {
         const newHierarchy = {
           id: payload.id,
+          name: `Hierarquia ${state.hierarchies.length + 1}`,
           createDate: now,
           updateDate: now,
           items: JSON.parse(JSON.stringify(payload.items)),
         };
 
-        state.hierarchies = [newHierarchy,...state.hierarchies];
+        state.hierarchies = [newHierarchy, ...state.hierarchies];
 
         return;
       }

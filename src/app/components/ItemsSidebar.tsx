@@ -39,63 +39,52 @@ export default function ItemsSidebar({
         <strong>Minhas Hierarquias</strong>
       </header>
       <section className="h-full m-1.5 p-1.5 overflow-auto text-white">
-        {hierarchyState.hierarchies.map((hierarchy, index) => (
+        {hierarchyState.hierarchies.map((hierarchy) => (
           <div
             key={hierarchy.id}
-            className={`bg-slate-600 border border-slate-500 rounded mb-3 
-              ${hierarchy.id === currentHierarchyId ? "bg-slate-800" : ""}`}
+            className={`relative cursor-pointer bg-slate-600 border border-slate-500 rounded mb-3 
+              ${
+                hierarchy.id === currentHierarchyId
+                  ? "bg-slate-800"
+                  : "hover:bg-slate-800"
+              }`}
+            onClick={() => setCurrentHierarchyId(hierarchy.id)}
           >
+            <div
+              className="absolute w-full h-full sm:hidden"
+              onClick={() => setShowSavedItems(false)}
+            ></div>
             <div className="p-3 text-sm">
               <div className="mb-2">
-                <span className="font-bold">Hierarquia {index + 1}</span>
+                <div
+                  className="font-bold truncate w-[95%]"
+                  title={hierarchy.name}
+                >
+                  {hierarchy.name}
+                </div>
               </div>
-              <div>
-                Criado:{" "}
-                {moment(hierarchy?.createDate).format("DD/MM/YYYY HH:mm")}
-              </div>
-              <div>
-                Atualizado:{" "}
+              <div className="min-h-10">
+                Última atualização:{" "}
                 {moment(hierarchy?.updateDate).format("DD/MM/YYYY HH:mm")}
               </div>
             </div>
             <div
-              className={`bg-slate-600 p-2 space-x-2 ${
+              className={`z-10 relative bg-slate-700 p-2 space-x-2 ${
                 hierarchy.id === currentHierarchyId ? "bg-slate-700" : ""
               }`}
             >
-              {hierarchy.id !== currentHierarchyId ? (
-                <>
-                  <button
-                    className="bg-slate-700 hover:bg-slate-800 !border-slate-500 hidden sm:inline"
-                    onClick={() => setCurrentHierarchyId(hierarchy.id)}
-                  >
-                    Abrir
-                  </button>
-                  <button
-                    className="bg-slate-700 hover:bg-slate-800 !border-slate-500 sm:hidden"
-                    onClick={() => {
-                      setShowSavedItems(false);
-                      setCurrentHierarchyId(hierarchy.id);
-                    }}
-                  >
-                    Abrir
-                  </button>
-                </>
-              ) : (
-                ""
-              )}
               <button
                 className="bg-slate-700 hover:bg-slate-800 space-x-2  !border-slate-500"
                 onClick={() => dispatch(removeHierarchy({ id: hierarchy.id }))}
               >
                 <FontAwesomeIcon width={9} icon={faTrash} />
-                <span>Eliminar</span>
+                <span>Excluir</span>
               </button>
             </div>
           </div>
         ))}
       </section>
-      <footer className="footer">
+      <footer className="footer bg-slate-600 py-2">
         <button
           onClick={() => {
             const newId = uuidv4();

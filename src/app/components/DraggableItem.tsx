@@ -266,7 +266,8 @@ const DraggableItem: React.FC<DraggableItem> = ({
                     }, 100);
                   }}
                 >
-                  <FontAwesomeIcon icon={faShare} width={12} />
+                  <FontAwesomeIcon icon={faShare} width={12} />{" "}
+                  <span>Mover</span>
                 </button>
 
                 {findParent(item) ? (
@@ -276,7 +277,7 @@ const DraggableItem: React.FC<DraggableItem> = ({
                     }}
                   >
                     <FontAwesomeIcon icon={faLinkSlash} width={12} />{" "}
-                    <span>Soltar</span>
+                    <span>Desvincular</span>
                   </button>
                 ) : (
                   ""
@@ -284,7 +285,7 @@ const DraggableItem: React.FC<DraggableItem> = ({
 
                 <button onClick={() => removeItem(item)}>
                   <FontAwesomeIcon icon={faXmark} width={12} />
-                  <span>Tirar</span>
+                  <span>Excluir</span>
                 </button>
               </section>
               {showSubitemForm && (
