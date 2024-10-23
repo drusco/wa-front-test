@@ -154,8 +154,6 @@ const DraggableItem: React.FC<DraggableItem> = ({
 
       const movementX = draggedPosition.x - targetPosition.x;
 
-      console.log("**", movementX);
-
       if (movementX >= 50) {
         moveItem(draggedItem, item);
         setShowChildren(true);

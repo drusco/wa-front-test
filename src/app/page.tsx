@@ -35,7 +35,7 @@ export default function Home() {
   );
 
   const saveData = (): void => {
-    console.log("save to store", items);
+    // save items to the redux store
 
     dispatch(
       saveHierarchy({
@@ -101,7 +101,7 @@ export default function Home() {
   }, [items]);
 
   useEffect(() => {
-    console.log(555, "current hierarchy id changed");
+    // current hierarchy id changed
     const hierarchy = hierarchyState.hierarchies.find(
       (hierarchy) => hierarchy?.id === currentHierarchyId
     );

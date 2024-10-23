@@ -40,15 +40,13 @@ export default function Hierarchies({
 
   const moveItem = (draggedItem: Item, targetItem?: Item): void => {
     setItems((items) => {
-      console.log("move", draggedItem.name, "to", targetItem?.name);
-
       if (draggedItem === targetItem) {
-        console.log("cancelled: dragged item equals target item");
+        // cancelled: dragged item equals target item
         return items;
       }
 
       if (targetItem && isDescendant(draggedItem, targetItem)) {
-        console.log("cancelled: prevent circular references");
+        // cancelled: prevent circular references
         return items;
       }
 
@@ -57,30 +55,24 @@ export default function Hierarchies({
       const parent = findParent(draggedItem, updatedItems);
 
       if (!parent && !targetItem) {
-        console.log("dragged item is on root already");
+        // dragged item is on root already
         return items;
       }
 
       if (targetItem && targetItem.items.includes(draggedItem)) {
-        console.log(draggedItem.name, "is already child of", targetItem.name);
+        // dragged item is already child of targetItem
         return items;
       }
 
-      console.log(
-        "before removeItem",
-        JSON.parse(JSON.stringify(updatedItems))
-      );
       removeItem(draggedItem, updatedItems);
 
       if (targetItem) {
+        // add dragged item to target items
         targetItem.items.push(draggedItem);
-        console.log("added", draggedItem.name, "to target.items");
       } else {
-        console.log("added", draggedItem.name, "to root items");
+        // add dragged item to root items
         updatedItems.push(draggedItem);
       }
-
-      console.log("final", JSON.parse(JSON.stringify(updatedItems)));
 
       return updatedItems;
     });
@@ -93,12 +85,12 @@ export default function Hierarchies({
 
     if (index >= 0) {
       const [removedItem] = itemList.splice(index, 1);
-      console.log("removed", removedItem.name, "from", itemList === fromArray);
+      // removed removedItem from item list
       result = true;
     } else {
       for (const child of itemList) {
         if (removeItem(item, child.items)) {
-          console.log("removed", item.name, "from", child.name);
+          // removed item from parent
           result = true;
         }
       }
@@ -132,7 +124,7 @@ export default function Hierarchies({
       }
 
       if (newIndex !== index) {
-        console.log("new index", index, "=>", newIndex);
+        // updates item index
 
         fromArray.splice(index, 1);
         fromArray.splice(newIndex, 0, item);
@@ -160,8 +152,6 @@ export default function Hierarchies({
         const parent = dropItemParent?.items ?? items;
         const indexOfDraggedItem = parent.indexOf(draggedItem);
         const indexOfDropItem = parent.indexOf(item);
-
-        console.log({ indexOfDraggedItem, indexOfDropItem });
 
         if (movement.y < 0) {
           offset = indexOfDropItem - indexOfDraggedItem;
