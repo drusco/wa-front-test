@@ -96,6 +96,7 @@ export default function Home() {
 
   useEffect(() => {
     updateData();
+    saveData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items]);
 
