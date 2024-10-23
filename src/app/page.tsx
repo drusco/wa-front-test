@@ -79,8 +79,13 @@ export default function Home() {
   };
 
   const createFirstLevelItem = (): void => {
-    if (!name?.length) {
-      setHasNameError(true);
+    if (!name.length) {
+      if (!hasNameError) {
+        setHasNameError(true);
+        setTimeout(() => {
+          setHasNameError(false);
+        }, 2000);
+      }
       return;
     }
 
@@ -135,10 +140,10 @@ export default function Home() {
                       value={name}
                       onChange={(event) => setName(event.target.value)}
                       type="text"
-                      placeholder="Inserir nova palavra..."
+                      placeholder="Inserir palavra..."
                       className={`border text-gray-600 outline-gray-700 border-r-0 w-full h-10 p-2 rounded-l border-gray-400 placeholder:text-sm ${
                         hasNameError
-                          ? "border-red-600 border-2 placeholder:text-red-500"
+                          ? "border-red-600 placeholder:text-red-600"
                           : ""
                       }`}
                     ></input>
@@ -151,12 +156,8 @@ export default function Home() {
                   </button>
                 </div>
                 <div className="text-xs text-gray-700 mt-2">
-                  {hasNameError && (
-                    <div className="font-bold text-red-500">* Obrigatorio</div>
-                  )}
-                  <div>
-                    * Esta palavra sera criada no primeiro nível da lista
-                  </div>
+                  * Obrigatorio. Esta palavra sera criada no primeiro nível da
+                  lista
                 </div>
               </div>
 

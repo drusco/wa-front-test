@@ -64,11 +64,12 @@ const DraggableItem: React.FC<DraggableItem> = ({
   const [showChildren, setShowChildren] = useState<boolean>(true);
   const [openItem, setOpenItem] = useState<boolean>(false);
   const [subitemName, setSubitemName] = useState<string>("");
+  const [itemName, setItemName] = useState<string>(item.name);
+  const [hasSubItemError, setHasSubItemError] = useState<boolean>(false);
   const [showSubitemForm, setShowSubitemForm] = useState<boolean>(false);
   const [clicked, setClicked] = useState<boolean>(false);
   const [isMovingItem, setIsMovingItem] = useState<boolean>(false);
   const dropTargetRef = React.useRef<HTMLDivElement | null>(null);
-
   const itemParent = findParent(item);
 
   useEffect(() => {
@@ -208,9 +209,18 @@ const DraggableItem: React.FC<DraggableItem> = ({
               <input
                 type="text"
                 value={item.name}
-                placeholder="Palavra"
+                placeholder="Inserir Palavra..."
                 onChange={(e) => {
                   item.name = e.target.value;
+                  setItems((items) => [...items]);
+                }}
+                onBlur={(e) => {
+                  const value = e.target.value;
+                  if (!value) {
+                    item.name = itemName;
+                  } else {
+                    setItemName(value);
+                  }
                   setItems((items) => [...items]);
                 }}
               />
@@ -310,7 +320,7 @@ const DraggableItem: React.FC<DraggableItem> = ({
                     <div className="w-1/2 text-gray-700">
                       <label
                         htmlFor={`${item.id}-subitem-name`}
-                        className="text-sm font-semibold mb-2 block"
+                        className="text-sm font-semibold my-2 block"
                       >
                         Subitem para:{" "}
                         <span className="font-normal">{item.name}</span>
@@ -320,28 +330,42 @@ const DraggableItem: React.FC<DraggableItem> = ({
                         value={subitemName}
                         onChange={(event) => setSubitemName(event.target.value)}
                         type="text"
-                        placeholder="Palavra"
-                        className="border text-gray-600 outline-gray-700 border-r-0 w-full h-10 p-2 rounded-l border-gray-400 placeholder:text-sm"
+                        placeholder="Inserir palavra..."
+                        className={`border text-gray-600 outline-gray-700 border-r-0 w-full h-10 p-2 rounded-l border-gray-400 placeholder:text-sm ${
+                          hasSubItemError
+                            ? "placeholder:text-red-600 border-red-600"
+                            : ""
+                        }`}
                       ></input>
                     </div>
                     <button
                       className="h-10 rounded-l-none border w-28"
-                      disabled={!subitemName.length}
                       onClick={() => {
+                        if (!subitemName.length) {
+                          if (!hasSubItemError) {
+                            setHasSubItemError(true);
+                            setTimeout(() => {
+                              setHasSubItemError(false);
+                            }, 2000);
+                          }
+                          return;
+                        }
+
                         createItem(
                           { id: uuidv4(), name: subitemName, items: [] },
                           item
                         );
                         setSubitemName("");
+                        setHasSubItemError(false);
                         setCurrentView("expanded");
                       }}
                     >
                       Criar
                     </button>
                   </div>
-                  <small className="text-xs text-gray-700">
-                    * Precisa ser preenchido para criar sub-item
-                  </small>
+                  <div className="text-xs text-gray-700 mt-2">
+                    * Obrigatorio. Precisa ser preenchido para criar sub-item
+                  </div>
                 </section>
               )}
             </div>
