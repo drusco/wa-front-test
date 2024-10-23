@@ -243,11 +243,11 @@ const DraggableItem: React.FC<DraggableItem> = ({
           {openItem && (
             <div>
               <section className="tree-item-options">
-                {itemParent && itemParent.items.length > 1 ? (
+                {!itemParent || itemParent.items.length > 1 ? (
                   <Fragment>
                     <button
                       className="disabled:opacity-30"
-                      disabled={itemParent.items[0].id === item.id}
+                      disabled={itemParent?.items[0].id === item.id}
                       onClick={() => {
                         orderItem(item, -1);
                       }}
@@ -257,7 +257,7 @@ const DraggableItem: React.FC<DraggableItem> = ({
                     <button
                       className="disabled:opacity-30"
                       disabled={
-                        itemParent.items[itemParent.items.length - 1].id ===
+                        itemParent?.items[itemParent.items.length - 1].id ===
                         item.id
                       }
                       onClick={() => {
