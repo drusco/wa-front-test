@@ -13,7 +13,12 @@ O **Criador de Hierarquia de Palavras** é uma aplicação que permite criar lis
 
 ## Integração com Aplicação CLI
 
-O formato JSON gerado por esta aplicação pode ser utilizado diretamente na minha aplicação **CLI em Java**, disponível no seguinte repositório: [wa-cli-test](https://github.com/drusco/wa-cli-test). A aplicação CLI utiliza esses arquivos JSON para processar dados de forma hierárquica.
+O formato JSON gerado por esta aplicação pode ser utilizado diretamente nas seguintes aplicações:
+
+- **CLI em Typescript**, disponível no seguinte repositório: [wa-cli-ts](https://github.com/drusco/wa-cli-ts).
+- **CLI em Java**, disponível no seguinte repositório: [wa-cli-test](https://github.com/drusco/wa-cli-test).
+
+As aplicações CLI acima utilizam esses arquivos JSON para processar dados de forma hierárquica.
 
 ## Como Executar o Projeto
 
